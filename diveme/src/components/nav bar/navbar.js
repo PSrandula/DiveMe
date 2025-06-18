@@ -49,9 +49,9 @@ export default function DiveMeNavbar() {
               <Users size={18} />
                 Dashboard
             </a>
-            <a href="/booking" className="nav-link">
+            <a href="/packages" className="nav-link">
               <ShoppingBag size={18} />
-              Booking
+              Packages
             </a>
             <a href="/map" className="nav-link">
               <MapPin size={18} />
@@ -89,19 +89,19 @@ export default function DiveMeNavbar() {
             <Users size={20} />
             Dashboard
           </a>
-          <a href="/booking" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a href="/packages" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
             <ShoppingBag size={20} />
-            Booking
+            Packages
           </a>
-          <a href="/locations" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a href="/map" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
             <MapPin size={20} />
             MapView
           </a>
-          <a href="/blog" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a href="/dive" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
             <FileText size={20} />
             Dive Centers
           </a>
-          <a href="/signup" className="mobile-signup-btn" onClick={() => setIsMobileMenuOpen(false)}>
+          <a href="/" className="mobile-signup-btn" onClick={() => setIsMobileMenuOpen(false)}>
             <UserPlus size={20} />
             Sign Up
           </a>
