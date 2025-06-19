@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^13.5.0",
     "ajv": "^6.12.6",
     "ajv-keywords": "^3.5.2",
+    "lucide-react": "^0.518.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
