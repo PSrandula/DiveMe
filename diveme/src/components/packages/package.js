@@ -163,3 +163,83 @@ const DivePackagesPage = () => {
     </>
   );
 };
+
+// Modern responsive CSS as JS styles for simplicity
+const styles = {
+  main: {
+    fontFamily: "'Poppins', sans-serif",
+    backgroundColor: '#f6faff',
+    padding: '6rem 1.5rem 2rem',
+    maxWidth: 1440,
+    margin: 'auto',
+  },
+  headerSection: {
+    textAlign: 'center',
+    marginBottom: '3rem',
+  },
+  pageTitle: {
+    fontSize: '2.8rem',
+    fontWeight: '800',
+    color: '#0b3d91',
+    marginBottom: '0.5rem',
+  },
+  pageSubtitle: {
+    fontSize: '1.25rem',
+    color: '#3a4f7a',
+    maxWidth: 700,
+    margin: '0 auto',
+  },
+  packagesGrid: {
+    display: 'grid',
+    gap: '2rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+    justifyContent: 'center',
+  },
+  packageCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    boxShadow: '0 10px 25px rgba(0, 61, 129, 0.12)',
+    overflow: 'hidden',
+    outline: 'none',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    cursor: 'default',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  packageImage: {
+    width: '100%',
+    height: 'auto',
+    objectFit: 'cover',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  packageInfo: {
+    padding: '1.5rem 1.75rem 2rem',
+    width: '100%',
+  },
+  packageTitle: {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    color: '#0b3d91',
+    marginBottom: '1rem',
+  },
+  detailsList: {
+    margin: 0,
+    padding: 0,
+    listStyle: 'none',
+  },
+  dt: {
+    fontWeight: '600',
+    color: '#375a99',
+    marginTop: '0.75rem',
+  },
+  dd: {
+    marginLeft: 0,
+    marginTop: '0.25rem',
+    color: '#5a6d8c',
+    lineHeight: 1.4,
+  },
+};
+
+export default DivePackagesPage;
