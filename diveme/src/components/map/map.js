@@ -666,6 +666,610 @@ export default function MapViewPage() {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+       .app {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #1a1a1a;
+        padding: 80px 24px 32px; /* top increased for navbar spacing */
+        }
+
+        .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 32px;
+        min-height: calc(100vh - 112px); /* ensure content fills below navbar */
+        }
+
+
+        .map-section {
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 24px;
+          padding: 32px;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 24px;
+        }
+
+        .map-header h1 {
+          margin: 0;
+          font-size: 2rem;
+          font-weight: 800;
+          background: linear-gradient(135deg, #2563eb, #06b6d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .location-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #10b981;
+          font-weight: 600;
+          background: rgba(16, 185, 129, 0.1);
+          padding: 8px 16px;
+          border-radius: 12px;
+        }
+
+        .location-info .icon {
+          width: 18px;
+          height: 18px;
+        }
+
+        .map-container {
+          height: 500px;
+          border-radius: 16px;
+          overflow: hidden;
+          margin-bottom: 24px;
+          position: relative;
+        }
+
+        .loading {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+          color: #0277bd;
+        }
+
+        .loading-icon {
+          width: 48px;
+          height: 48px;
+          animation: pulse 2s infinite;
+          margin-bottom: 16px;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .quick-info {
+          background: linear-gradient(135deg, #06b6d4, #0891b2);
+          color: white;
+          padding: 20px;
+          border-radius: 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .quick-info-content h3 {
+          margin: 0 0 8px 0;
+          font-size: 1.25rem;
+          font-weight: 700;
+        }
+
+        .quick-stats {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+        }
+
+        .distance {
+          background: rgba(255, 255, 255, 0.2);
+          padding: 4px 12px;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        .rating {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-weight: 600;
+        }
+
+        .star-icon {
+          width: 16px;
+          height: 16px;
+          fill: #fbbf24;
+          color: #fbbf24;
+        }
+
+        .details-btn {
+          background: white;
+          color: #0891b2;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .details-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar {
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 24px;
+          padding: 32px;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+          height: fit-content;
+        }
+
+        .sidebar-header {
+          margin-bottom: 24px;
+        }
+
+        .sidebar-header h2 {
+          margin: 0 0 12px 0;
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #1e293b;
+        }
+
+        .nearest-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #059669;
+          font-weight: 600;
+          font-size: 0.9rem;
+        }
+
+        .nearest-badge .icon {
+          width: 16px;
+          height: 16px;
+        }
+
+        .dive-spots-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .dive-spot-card {
+          background: #f8fafc;
+          border-radius: 16px;
+          padding: 16px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
+          display: flex;
+          gap: 16px;
+        }
+
+        .dive-spot-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+          background: white;
+        }
+
+        .dive-spot-card.selected {
+          border-color: #2563eb;
+          background: #eff6ff;
+          box-shadow: 0 8px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        .dive-spot-card.nearest {
+          border-color: #10b981;
+          background: #ecfdf5;
+        }
+
+        .spot-image {
+          width: 80px;
+          height: 80px;
+          border-radius: 12px;
+          overflow: hidden;
+          flex-shrink: 0;
+          position: relative;
+        }
+
+        .spot-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .nearest-indicator {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          background: #10b981;
+          color: white;
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .spot-info {
+          flex: 1;
+        }
+
+        .spot-info h3 {
+          margin: 0 0 8px 0;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #1e293b;
+        }
+
+        .spot-meta {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 8px;
+        }
+
+        .spot-meta .rating {
+          font-size: 0.9rem;
+        }
+
+        .spot-meta .distance {
+          color: #64748b;
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        .spot-details {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .spot-details span {
+          font-size: 0.85rem;
+          color: #64748b;
+        }
+
+        .depth {
+          font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 24px;
+          max-width: 600px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+        }
+
+        .close-btn {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.1);
+          border: none;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          font-size: 24px;
+          cursor: pointer;
+          z-index: 10;
+          transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+          background: rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+          position: relative;
+        }
+
+        .modal-image {
+          width: 100%;
+          height: 250px;
+          object-fit: cover;
+          border-radius: 24px 24px 0 0;
+        }
+
+        .modal-info {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+          color: white;
+          padding: 40px 32px 24px 32px;
+        }
+
+        .modal-info h2 {
+          margin: 0 0 12px 0;
+          font-size: 1.75rem;
+          font-weight: 800;
+        }
+
+        .modal-meta {
+          display: flex;
+          gap: 20px;
+          align-items: center;
+        }
+
+        .modal-meta .rating,
+        .modal-meta .distance {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-weight: 600;
+        }
+
+        .modal-meta .icon {
+          width: 18px;
+          height: 18px;
+        }
+
+        .modal-body {
+          padding: 32px;
+        }
+
+        .description {
+          font-size: 1.1rem;
+          line-height: 1.6;
+          color: #4b5563;
+          margin-bottom: 32px;
+        }
+
+        .details-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 24px;
+          margin-bottom: 32px;
+        }
+
+        .detail-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 20px;
+          background: #f8fafc;
+          border-radius: 16px;
+          border-left: 4px solid #06b6d4;
+        }
+
+        .detail-item .icon {
+          width: 24px;
+          height: 24px;
+          color: #06b6d4;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        .detail-item div {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .detail-item strong {
+          font-weight: 700;
+          color: #1e293b;
+        }
+
+        .detail-item span {
+          color: #64748b;
+          font-weight: 600;
+        }
+
+        .highlights {
+          margin-bottom: 32px;
+        }
+
+        .highlights h3 {
+          margin: 0 0 16px 0;
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #1e293b;
+        }
+
+        .highlight-tags {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .highlight-tag {
+          background: linear-gradient(135deg, #06b6d4, #0891b2);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        .modal-actions {
+          display: flex;
+          gap: 16px;
+        }
+
+        .learn-more-btn {
+          flex: 1;
+          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          color: white;
+          border: none;
+          padding: 16px 24px;
+          border-radius: 16px;
+          font-weight: 700;
+          font-size: 1.1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .learn-more-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 40px rgba(37, 99, 235, 0.3);
+        }
+
+        .contact-btn {
+          flex: 1;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border: none;
+          padding: 16px 24px;
+          border-radius: 16px;
+          font-weight: 700;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .contact-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 40px rgba(16, 185, 129, 0.3);
+        }
+
+
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+          .main-container {
+            grid-template-columns: 1fr;
+            gap: 24px;
+          }
+          
+          .sidebar {
+            order: -1;
+          }
+          
+          .dive-spots-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .app {
+            padding: 16px;
+          }
+          
+          .main-container {
+            gap: 16px;
+          }
+          
+          .map-section,
+          .sidebar {
+            padding: 20px;
+          }
+          
+          .map-header {
+            flex-direction: column;
+            gap: 16px;
+            align-items: flex-start;
+          }
+          
+          .map-header h1 {
+            font-size: 1.75rem;
+          }
+          
+          .map-container {
+            height: 350px;
+          }
+          
+          .quick-info {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+          }
+          
+          .dive-spots-list {
+            grid-template-columns: 1fr;
+          }
+          
+          .modal-content {
+            margin: 20px;
+            max-height: calc(100vh - 40px);
+          }
+          
+          .modal-body {
+            padding: 24px;
+          }
+          
+          .details-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+          
+          .modal-actions {
+            flex-direction: column;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .spot-image {
+            width: 60px;
+            height: 60px;
+          }
+          
+          .dive-spot-card {
+            padding: 12px;
+            gap: 12px;
+          }
+          
+          .spot-info h3 {
+            font-size: 1rem;
+          }
+          
+          .map-header h1 {
+            font-size: 1.5rem;
+          }
+          
+          .contact-btn {
+            font-size: 0.9rem;
+            padding: 14px 20px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
