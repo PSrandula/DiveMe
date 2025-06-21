@@ -5,6 +5,8 @@ import RegisterPage from './components/register page/register';
 import HomePage from './components/home page/home';
 import Navbar from './components/nav bar/navbar';
 import Footer from './components/footer/footer';
+import Packages from './components/packages/package';
+import Map from './components/map/map';
 
 function AppContent() {
   const location = useLocation();
@@ -20,6 +22,8 @@ function AppContent() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/packages" element={<Packages />} />
+        <Route path="/map" element={<Map />} />
       </Routes>
 
       {!shouldHideNavbar && <Footer />}
