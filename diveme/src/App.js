@@ -7,6 +7,8 @@ import Navbar from './components/nav bar/navbar';
 import Footer from './components/footer/footer';
 import Packages from './components/packages/package';
 import Map from './components/map/map';
+import DiveCenter from './components/dive centers/divecenter';
+import Booking from './components/booking page/booking';
 
 function AppContent() {
   const location = useLocation();
@@ -24,6 +26,8 @@ function AppContent() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/map" element={<Map />} />
+        <Route path="/dive" element={<DiveCenter />} />
+        <Route path="/booking" element={<Booking />} />
       </Routes>
 
       {!shouldHideNavbar && <Footer />}
