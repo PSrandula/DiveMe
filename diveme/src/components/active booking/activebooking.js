@@ -442,3 +442,325 @@ const EnhancedActiveBookingPage = () => {
     </div>
   );
 };
+
+const styles = {
+  container: {
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+  backgroundColor: '#f8fafc',
+  minHeight: '100vh',
+  color: '#1e293b',
+  paddingTop: '5rem' 
+},
+  header: {
+    background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
+    color: 'white',
+    padding: '2rem'
+  },
+  headerContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '2rem'
+  },
+  title: {
+    fontSize: '2.5rem',
+    fontWeight: '700',
+    margin: '0 0 0.5rem 0'
+  },
+  subtitle: {
+    fontSize: '1.1rem',
+    opacity: 0.9,
+    margin: 0
+  },
+  statsOverview: {
+    display: 'flex',
+    gap: '2rem'
+  },
+  statItem: {
+    textAlign: 'center'
+  },
+  statNumber: {
+    display: 'block',
+    fontSize: '2rem',
+    fontWeight: '700'
+  },
+  statLabel: {
+    fontSize: '0.9rem',
+    opacity: 0.8
+  },
+  mainContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '2rem'
+  },
+  controlsBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '2rem',
+    gap: '1rem',
+    flexWrap: 'wrap'
+  },
+  searchBox: {
+    flex: 1,
+    maxWidth: '400px'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '0.75rem 1rem',
+    border: '2px solid #e2e8f0',
+    borderRadius: '10px',
+    fontSize: '1rem',
+    boxSizing: 'border-box'
+  },
+  filterButtons: {
+    display: 'flex',
+    gap: '0.5rem'
+  },
+  filterButton: {
+    padding: '0.5rem 1rem',
+    border: '2px solid #e2e8f0',
+    borderRadius: '8px',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'all 0.2s'
+  },
+  filterButtonActive: {
+    backgroundColor: '#3b82f6',
+    color: 'white',
+    borderColor: '#3b82f6'
+  },
+  contentLayout: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 1fr',
+    gap: '2rem'
+  },
+  bookingsSection: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+  },
+  sectionHeader: {
+    marginBottom: '1.5rem'
+  },
+  sectionTitle: {
+    fontSize: '1.5rem',
+    fontWeight: '600',
+    margin: 0
+  },
+  bookingsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
+  },
+  bookingCard: {
+    border: '2px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    backgroundColor: 'white'
+  },
+  bookingHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '1rem'
+  },
+  bookingId: {
+    fontSize: '1.2rem',
+    fontWeight: '700',
+    margin: '0 0 0.25rem 0',
+    color: '#3b82f6'
+  },
+  clientName: {
+    fontSize: '1rem',
+    fontWeight: '500',
+    margin: 0,
+    color: '#4b5563'
+  },
+  statusContainer: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  statusBadge: {
+    padding: '0.25rem 0.75rem',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em'
+  },
+  bookingDetails: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0.5rem',
+    marginBottom: '1rem'
+  },
+  detailRow: {
+    display: 'flex',
+    justifyContent: 'space-between'
+  },
+  detailLabel: {
+    fontSize: '0.9rem',
+    color: '#6b7280',
+    fontWeight: '500'
+  },
+  detailValue: {
+    fontSize: '0.9rem',
+    fontWeight: '600'
+  },
+  amountValue: {
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    color: '#059669'
+  },
+  actionButtons: {
+    display: 'flex',
+    gap: '0.5rem',
+    marginTop: '1rem'
+  },
+  confirmButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    transition: 'background-color 0.2s'
+  },
+  cancelButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: '#ef4444',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    transition: 'background-color 0.2s'
+  },
+  sidebar: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem'
+  },
+  sidebarCard: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+  },
+  sidebarTitle: {
+    fontSize: '1.2rem',
+    fontWeight: '600',
+    margin: '0 0 1rem 0'
+  },
+  metricsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
+  },
+  metricItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem'
+  },
+  metricIcon: {
+    fontSize: '1.5rem'
+  },
+  metricValue: {
+    fontSize: '1.1rem',
+    fontWeight: '700',
+    color: '#1e293b'
+  },
+  metricLabel: {
+    fontSize: '0.8rem',
+    color: '#6b7280'
+  },
+  notificationsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem'
+  },
+  notificationItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.75rem'
+  },
+  notificationDot: {
+    width: '8px',
+    height: '8px',
+    backgroundColor: '#3b82f6',
+    borderRadius: '50%',
+    marginTop: '0.25rem',
+    flexShrink: 0
+  },
+  notificationText: {
+    fontSize: '0.9rem',
+    margin: 0,
+    lineHeight: '1.4',
+    color: '#4b5563'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000
+  },
+  modal: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    width: '90%',
+    maxWidth: '600px',
+    maxHeight: '80vh',
+    overflow: 'hidden',
+    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)'
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1.5rem',
+    borderBottom: '1px solid #e2e8f0',
+    backgroundColor: '#f8fafc'
+  },
+  closeButton: {
+    background: 'none',
+    border: 'none',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    color: '#6b7280',
+    padding: '0.5rem'
+  },
+  modalContent: {
+    padding: '1.5rem',
+    overflowY: 'auto',
+    maxHeight: 'calc(80vh - 120px)'
+  },
+  modalSection: {
+    marginBottom: '1.5rem'
+  },
+  modalActions: {
+    display: 'flex',
+    gap: '1rem',
+    marginTop: '2rem',
+    paddingTop: '1rem',
+    borderTop: '1px solid #e2e8f0'
+  }
+};
+
+export default EnhancedActiveBookingPage;
