@@ -763,4 +763,342 @@ const handleBooking = (pkg) => {
   );
 }
 
+const styles = {
+    container: {
+      fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif",
+      backgroundColor: '#f8fafc',
+      minHeight: '100vh',
+      padding: '2rem 1rem',
+      paddingTop: '5rem',
+    },
+    centerSelector: {
+      display: 'flex',
+      gap: '1rem',
+      marginBottom: '2rem',
+      overflowX: 'auto',
+      padding: '0.5rem 0'
+    },
+    centerOption: {
+      padding: '0.75rem 1.5rem',
+      borderRadius: '25px',
+      border: 'none',
+      cursor: 'pointer',
+      fontWeight: '600',
+      fontSize: '0.9rem',
+      transition: 'all 0.3s ease',
+      whiteSpace: 'nowrap',
+      minWidth: 'fit-content'
+    },
+    centerOptionActive: {
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white',
+      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+    },
+    centerOptionInactive: {
+      backgroundColor: 'white',
+      color: '#4a5568',
+      border: '1px solid #e2e8f0'
+    },
+    mainCard: {
+      backgroundColor: 'white',
+      borderRadius: '20px',
+      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+      overflow: 'hidden',
+      maxWidth: '1200px',
+      margin: '0 auto'
+    },
+    heroSection: {
+      position: 'relative',
+      height: '400px',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      display: 'flex',
+      alignItems: 'end',
+      padding: '2rem'
+    },
+    heroOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.2))'
+    },
+    heroContent: {
+      position: 'relative',
+      zIndex: 2,
+      color: 'white'
+    },
+    centerName: {
+      fontSize: '2.5rem',
+      fontWeight: '700',
+      marginBottom: '0.5rem',
+      textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+    },
+    centerLocation: {
+      fontSize: '1.2rem',
+      opacity: 0.9,
+      marginBottom: '1rem'
+    },
+    ratingSection: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem'
+    },
+    rating: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      padding: '0.5rem 1rem',
+      borderRadius: '25px',
+      backdropFilter: 'blur(10px)'
+    },
+    ratingText: {
+      fontWeight: '600'
+    },
+    reviewCount: {
+      opacity: 0.8
+    },
+    contentSection: {
+      padding: '2rem'
+    },
+    tabNavigation: {
+      display: 'flex',
+      borderBottom: '2px solid #f1f5f9',
+      marginBottom: '2rem',
+      gap: '0.5rem'
+    },
+    tab: {
+      padding: '1rem 1.5rem',
+      border: 'none',
+      backgroundColor: 'transparent',
+      cursor: 'pointer',
+      fontWeight: '600',
+      fontSize: '1rem',
+      borderRadius: '10px 10px 0 0',
+      transition: 'all 0.3s ease',
+      position: 'relative'
+    },
+    tabActive: {
+      color: '#667eea',
+      backgroundColor: '#f8fafc'
+    },
+    tabInactive: {
+      color: '#64748b'
+    },
+    tabContent: {
+      animation: 'fadeIn 0.3s ease'
+    },
+    description: {
+      fontSize: '1.1rem',
+      lineHeight: '1.7',
+      color: '#4a5568',
+      marginBottom: '2rem'
+    },
+    featuresGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '1rem',
+      marginBottom: '2rem'
+    },
+    featureCard: {
+      padding: '1rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '10px',
+      textAlign: 'center',
+      border: '1px solid #e2e8f0',
+      transition: 'transform 0.2s ease'
+    },
+    featureTitle: {
+      fontWeight: '600',
+      color: '#2d3748',
+      marginBottom: '0.5rem'
+    },
+    specialtiesList: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '0.5rem',
+      marginBottom: '2rem'
+    },
+    specialtyTag: {
+      padding: '0.5rem 1rem',
+      backgroundColor: '#667eea',
+      color: 'white',
+      borderRadius: '20px',
+      fontSize: '0.9rem',
+      fontWeight: '500'
+    },
+    packagesGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+      gap: '1.5rem'
+    },
+    packageCard: {
+      border: '1px solid #e2e8f0',
+      borderRadius: '15px',
+      padding: '1.5rem',
+      transition: 'all 0.3s ease',
+      position: 'relative',
+      backgroundColor: 'white',
+      cursor: 'pointer'
+    },
+    packageCardHover: {
+      transform: 'translateY(-5px)',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+      borderColor: '#667eea'
+    },
+    highlightBadge: {
+      position: 'absolute',
+      top: '-10px',
+      right: '20px',
+      backgroundColor: '#f56565',
+      color: 'white',
+      padding: '0.3rem 0.8rem',
+      borderRadius: '15px',
+      fontSize: '0.8rem',
+      fontWeight: '600'
+    },
+    packageHeader: {
+      marginBottom: '1rem'
+    },
+    packageName: {
+      fontSize: '1.3rem',
+      fontWeight: '700',
+      color: '#2d3748',
+      marginBottom: '0.5rem'
+    },
+    packagePrice: {
+      fontSize: '2rem',
+      fontWeight: '700',
+      color: '#667eea',
+      marginBottom: '0.5rem'
+    },
+    packageMeta: {
+      display: 'flex',
+      gap: '1rem',
+      fontSize: '0.9rem',
+      color: '#64748b',
+      marginBottom: '1rem'
+    },
+    packageDescription: {
+      color: '#4a5568',
+      marginBottom: '1rem',
+      lineHeight: '1.6'
+    },
+    includesList: {
+      listStyle: 'none',
+      padding: 0,
+      marginBottom: '1.5rem'
+    },
+    includesItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginBottom: '0.3rem',
+      fontSize: '0.9rem',
+      color: '#4a5568'
+    },
+    checkIcon: {
+      color: '#48bb78',
+      fontWeight: 'bold'
+    },
+    bookButton: {
+      width: '100%',
+      padding: '0.8rem',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: 'white',
+      border: 'none',
+      borderRadius: '10px',
+      fontWeight: '600',
+      fontSize: '1rem',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      textDecoration: 'none',
+      display: 'block',
+      textAlign: 'center'
+    },
+    reviewsGrid: {
+      display: 'grid',
+      gap: '1.5rem'
+    },
+    reviewCard: {
+      padding: '1.5rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '15px',
+      border: '1px solid #e2e8f0'
+    },
+    reviewHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: '1rem'
+    },
+    reviewAuthor: {
+      fontWeight: '600',
+      color: '#2d3748',
+      marginBottom: '0.25rem'
+    },
+    reviewDate: {
+      fontSize: '0.8rem',
+      color: '#64748b'
+    },
+    reviewTitle: {
+      fontSize: '1.1rem',
+      fontWeight: '600',
+      color: '#2d3748',
+      marginBottom: '0.5rem'
+    },
+    reviewContent: {
+      color: '#4a5568',
+      lineHeight: '1.6',
+      marginBottom: '1rem'
+    },
+    reviewFooter: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      fontSize: '0.8rem',
+      color: '#64748b'
+    },
+    helpful: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.3rem'
+    },
+    gallery: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '1rem',
+      marginBottom: '2rem'
+    },
+    galleryImage: {
+      width: '100%',
+      height: '150px',
+      objectFit: 'cover',
+      borderRadius: '10px',
+      cursor: 'pointer',
+      transition: 'transform 0.3s ease'
+    },
+    imageModal: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 2000,
+      padding: '2rem'
+    },
+    fullImage: {
+      maxWidth: '90%',
+      maxHeight: '90%',
+      objectFit: 'contain',
+      borderRadius: '10px'
+    }
+  };
+
 export default DiveCenters;
