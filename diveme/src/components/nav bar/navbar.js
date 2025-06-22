@@ -42,28 +42,32 @@ export default function DiveMeNavbar() {
         <nav className="navigation">
           <div className="nav-links">
             <a href="/home" className="nav-link">
-              <Home size={18} />
+              <Home size={12} />
               Home
             </a>
-            <a href="/Dashboard" className="nav-link">
-              <Users size={18} />
-                Dashboard
+            <a href="/admin" className="nav-link">
+              <Users size={12} />
+                Admin Dashboard
             </a>
             <a href="/packages" className="nav-link">
-              <ShoppingBag size={18} />
+              <ShoppingBag size={12} />
               Packages
             </a>
             <a href="/map" className="nav-link">
-              <MapPin size={18} />
+              <MapPin size={12} />
                 Map View
             </a>
             <a href="/dive" className="nav-link">
-              <FileText size={18} />
+              <FileText size={12} />
               Dive Centers
+            </a>
+            <a href="/activebooking" className="nav-link">
+              <FileText size={12} />
+              Active Bookings
             </a>
           </div>
           <a href="/" className="signup-btn">
-            <UserPlus size={18} />
+            <UserPlus size={12} />
             Sign Up
           </a>
         </nav>
@@ -85,9 +89,9 @@ export default function DiveMeNavbar() {
             <Home size={20} />
             Home
           </a>
-          <a href="/dashboard" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a href="/admin" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
             <Users size={20} />
-            Dashboard
+            Admin Dashboard
           </a>
           <a href="/packages" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
             <ShoppingBag size={20} />
@@ -100,6 +104,10 @@ export default function DiveMeNavbar() {
           <a href="/dive" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
             <FileText size={20} />
             Dive Centers
+          </a>
+          <a href="/activebooking" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+            <FileText size={20} />
+            Active sBooking
           </a>
           <a href="/" className="mobile-signup-btn" onClick={() => setIsMobileMenuOpen(false)}>
             <UserPlus size={20} />
@@ -219,7 +227,7 @@ export default function DiveMeNavbar() {
         .nav-links {
           display: flex;
           align-items: center;
-          gap: 2rem;
+          gap: 1.6rem;
         }
 
         .nav-link {
@@ -233,7 +241,7 @@ export default function DiveMeNavbar() {
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
         }
 
         .nav-link:hover {
