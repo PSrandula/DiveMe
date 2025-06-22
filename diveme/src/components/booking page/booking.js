@@ -200,3 +200,245 @@ const IntegratedBookingPage = () => {
       </div>
     );
   }
+
+    return (
+    <div style={styles.container}>
+      <div style={styles.bookingCard}>
+        {/* Header */}
+        <div style={styles.header}>
+          <h1 style={styles.title}>Complete Your Booking</h1>
+          <div style={styles.progressBar}>
+            <div style={styles.progressStep}>
+              <div style={{
+                ...styles.stepNumber,
+                ...(currentStep >= 1 ? styles.stepActive : styles.stepInactive)
+              }}>1</div>
+              <span style={styles.stepLabel}>Select Date</span>
+            </div>
+            <div style={styles.progressLine}></div>
+            <div style={styles.progressStep}>
+              <div style={{
+                ...styles.stepNumber,
+                ...(currentStep >= 2 ? styles.stepActive : styles.stepInactive)
+              }}>2</div>
+              <span style={styles.stepLabel}>Personal Details</span>
+            </div>
+            <div style={styles.progressLine}></div>
+            <div style={styles.progressStep}>
+              <div style={{
+                ...styles.stepNumber,
+                ...(currentStep >= 3 ? styles.stepActive : styles.stepInactive)
+              }}>3</div>
+              <span style={styles.stepLabel}>Confirmation</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Package Summary */}
+        <div style={styles.packageSummary}>
+          <div style={styles.summaryGrid}>
+            <div>
+              <h4>{bookingData.packageName}</h4>
+              <p>{bookingData.centerName}</p>
+            </div>
+            <div style={styles.packagePrice}>
+              <span style={styles.price}>${bookingData.packagePrice}</span>
+              <span style={styles.priceDetail}>per person</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Step Content */}
+        <div style={styles.stepContent}>
+          {currentStep === 1 && (
+            <div>
+              <h3>Select Your Dive Date & Participants</h3>
+              
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Preferred Date *</label>
+                <input
+                  type="date"
+                  min={getMinDate()}
+                  value={bookingData.selectedDate}
+                  onChange={(e) => handleInputChange('selectedDate', e.target.value)}
+                  style={{
+                    ...styles.input,
+                    ...(errors.selectedDate ? styles.inputError : {})
+                  }}
+                />
+                {errors.selectedDate && <span style={styles.errorText}>{errors.selectedDate}</span>}
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Number of Participants *</label>
+                <select
+                  value={bookingData.participants}
+                  onChange={(e) => handleInputChange('participants', parseInt(e.target.value))}
+                  style={{
+                    ...styles.input,
+                    ...(errors.participants ? styles.inputError : {})
+                  }}
+                >
+                  {[1,2,3,4,5,6,7,8].map(num => (
+                    <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</option>
+                  ))}
+                </select>
+                {errors.participants && <span style={styles.errorText}>{errors.participants}</span>}
+              </div>
+
+              <div style={styles.priceBreakdown}>
+                <div style={styles.breakdownRow}>
+                  <span>{bookingData.packageName} ({bookingData.participants} × ${bookingData.packagePrice}):</span>
+                  <span>${bookingData.totalAmount}</span>
+                </div>
+                <div style={styles.totalRow}>
+                  <span>Total Amount:</span>
+                  <span>${bookingData.totalAmount}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div>
+              <h3>Personal & Emergency Details</h3>
+              
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>First Name *</label>
+                  <input
+                    type="text"
+                    value={bookingData.personalDetails.firstName}
+                    onChange={(e) => handleInputChange('personalDetails.firstName', e.target.value)}
+                    style={{
+                      ...styles.input,
+                      ...(errors['personalDetails.firstName'] ? styles.inputError : {})
+                    }}
+                  />
+                  {errors['personalDetails.firstName'] && <span style={styles.errorText}>{errors['personalDetails.firstName']}</span>}
+                </div>
+                
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Last Name *</label>
+                  <input
+                    type="text"
+                    value={bookingData.personalDetails.lastName}
+                    onChange={(e) => handleInputChange('personalDetails.lastName', e.target.value)}
+                    style={{
+                      ...styles.input,
+                      ...(errors['personalDetails.lastName'] ? styles.inputError : {})
+                    }}
+                  />
+                  {errors['personalDetails.lastName'] && <span style={styles.errorText}>{errors['personalDetails.lastName']}</span>}
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Email Address *</label>
+                  <input
+                    type="email"
+                    value={bookingData.personalDetails.email}
+                    onChange={(e) => handleInputChange('personalDetails.email', e.target.value)}
+                    style={{
+                      ...styles.input,
+                      ...(errors['personalDetails.email'] ? styles.inputError : {})
+                    }}
+                  />
+                  {errors['personalDetails.email'] && <span style={styles.errorText}>{errors['personalDetails.email']}</span>}
+                </div>
+                
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Phone Number *</label>
+                  <input
+                    type="tel"
+                    value={bookingData.personalDetails.phone}
+                    onChange={(e) => handleInputChange('personalDetails.phone', e.target.value)}
+                    style={{
+                      ...styles.input,
+                      ...(errors['personalDetails.phone'] ? styles.inputError : {})
+                    }}
+                  />
+                  {errors['personalDetails.phone'] && <span style={styles.errorText}>{errors['personalDetails.phone']}</span>}
+                </div>
+              </div>
+
+              <h4 style={styles.sectionTitle}>Diving Experience</h4>
+              <div style={styles.formRow}>                  
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Diving Experience</label>
+                  <select
+                    value={bookingData.personalDetails.experience}
+                    onChange={(e) => handleInputChange('personalDetails.experience', e.target.value)}
+                    style={styles.input}
+                  >
+                    <option value="">Select Experience</option>
+                    <option value="none">First Time</option>
+                    <option value="beginner">1-10 Dives</option>
+                    <option value="intermediate">11-50 Dives</option>
+                    <option value="experienced">50+ Dives</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Medical Conditions</label>
+                <textarea
+                  value={bookingData.personalDetails.medicalConditions}
+                  onChange={(e) => handleInputChange('personalDetails.medicalConditions', e.target.value)}
+                  style={styles.textarea}
+                  placeholder="Any medical conditions we should be aware of..."
+                />
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Special Requests</label>
+                <textarea
+                  value={bookingData.specialRequests}
+                  onChange={(e) => handleInputChange('specialRequests', e.target.value)}
+                  style={styles.textarea}
+                  placeholder="Any special requests or additional information..."
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation Buttons */}
+        <div style={styles.buttonGroup}>
+          {currentStep > 1 && (
+            <button
+              style={styles.backButton}
+              onClick={handlePrevious}
+            >
+              Previous
+            </button>
+          )}
+          
+          {currentStep < 2 ? (
+            <button
+              style={styles.nextButton}
+              onClick={handleNext}
+            >
+              Next Step
+            </button>
+          ) : (
+            <button
+              style={{
+                ...styles.nextButton,
+                ...(isSubmitting ? styles.buttonDisabled : {})
+              }}
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Processing...' : 'Complete Booking'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+  
+
+export default IntegratedBookingPage;
