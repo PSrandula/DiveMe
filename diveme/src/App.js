@@ -9,6 +9,7 @@ import Packages from './components/packages/package';
 import Map from './components/map/map';
 import DiveCenter from './components/dive centers/divecenter';
 import Booking from './components/booking page/booking';
+import ActiveBooking from './components/active booking/activebooking';
 
 function AppContent() {
   const location = useLocation();
@@ -28,6 +29,7 @@ function AppContent() {
         <Route path="/map" element={<Map />} />
         <Route path="/dive" element={<DiveCenter />} />
         <Route path="/booking" element={<Booking />} />
+        <Route path="/activebooking" element={<ActiveBooking />} />
       </Routes>
 
       {!shouldHideNavbar && <Footer />}
