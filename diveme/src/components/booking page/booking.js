@@ -439,6 +439,278 @@ const IntegratedBookingPage = () => {
     </div>
   );
 };
+
+const styles = {
+  container: {
+    fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif",
+    backgroundColor: '#f8fafc',
+    minHeight: '100vh',
+    padding: '6rem 2rem 1rem'
+  },
+  bookingCard: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    backgroundColor: 'white',
+    borderRadius: '20px',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden'
+  },
+  header: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    padding: '2rem',
+    textAlign: 'center'
+  },
+  title: {
+    fontSize: '2rem',
+    fontWeight: '700',
+    marginBottom: '2rem'
+  },
+  progressBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem'
+  },
+  progressStep: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem'
+  },
+  stepNumber: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '600',
+    fontSize: '1.1rem'
+  },
+  stepActive: {
+    backgroundColor: 'white',
+    color: '#667eea'
+  },
+  stepInactive: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    color: 'white'
+  },
+  stepLabel: {
+    fontSize: '0.9rem',
+    textAlign: 'center'
+  },
+  progressLine: {
+    width: '60px',
+    height: '2px',
+    backgroundColor: 'rgba(255,255,255,0.3)'
+  },
+  packageSummary: {
+    padding: '1.5rem 2rem',
+    backgroundColor: '#f8fafc',
+    borderBottom: '1px solid #e2e8f0'
+  },
+  summaryGrid: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  packagePrice: {
+    textAlign: 'right'
+  },
+  price: {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    color: '#667eea',
+    display: 'block'
+  },
+  priceDetail: {
+    fontSize: '0.9rem',
+    color: '#64748b'
+  },
+  stepContent: {
+    padding: '2rem'
+  },
+  formGroup: {
+    marginBottom: '1.5rem'
+  },
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1rem',
+    '@media (max-width: 768px)': {
+      gridTemplateColumns: '1fr'
+    }
+  },
+  label: {
+    display: 'block',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    color: '#2d3748',
+    marginBottom: '0.5rem'
+  },
+  input: {
+    width: '100%',
+    padding: '0.75rem',
+    border: '2px solid #e2e8f0',
+    borderRadius: '10px',
+    fontSize: '1rem',
+    transition: 'border-color 0.3s ease',
+    boxSizing: 'border-box'
+  },
+  inputError: {
+    borderColor: '#f56565'
+  },
+  textarea: {
+    width: '100%',
+    padding: '0.75rem',
+    border: '2px solid #e2e8f0',
+    borderRadius: '10px',
+    fontSize: '1rem',
+    minHeight: '80px',
+    resize: 'vertical',
+    fontFamily: 'inherit',
+    transition: 'border-color 0.3s ease',
+    boxSizing: 'border-box'
+  },
+  errorText: {
+    color: '#f56565',
+    fontSize: '0.8rem',
+    marginTop: '0.25rem',
+    display: 'block'
+  },
+  sectionTitle: {
+    fontSize: '1.2rem',
+    fontWeight: '600',
+    color: '#2d3748',
+    marginTop: '2rem',
+    marginBottom: '1rem',
+    borderBottom: '2px solid #e2e8f0',
+    paddingBottom: '0.5rem'
+  },
+  priceBreakdown: {
+    backgroundColor: '#f8fafc',
+    padding: '1rem',
+    borderRadius: '10px',
+    marginTop: '1rem'
+  },
+  breakdownRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '0.5rem',
+    color: '#64748b'
+  },
+  totalRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '1.1rem',
+    fontWeight: '700',
+    color: '#2d3748',
+    borderTop: '1px solid #e2e8f0',
+    paddingTop: '0.5rem'
+  },
+  buttonGroup: {
+    display: 'flex',
+    gap: '1rem',
+    padding: '2rem',
+    borderTop: '1px solid #e2e8f0',
+    justifyContent: 'space-between'
+  },
+  backButton: {
+    padding: '0.75rem 2rem',
+    backgroundColor: '#f8fafc',
+    color: '#64748b',
+    border: '2px solid #e2e8f0',
+    borderRadius: '10px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  nextButton: {
+    padding: '0.75rem 2rem',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    marginLeft: 'auto'
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed'
+  },
+  successContainer: {
+    maxWidth: '600px',
+    margin: '0 auto',
+    textAlign: 'center',
+    backgroundColor: 'white',
+    borderRadius: '20px',
+    padding: '3rem',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+  },
+  successIcon: {
+    fontSize: '4rem',
+    marginBottom: '1rem'
+  },
+  successTitle: {
+    fontSize: '2.5rem',
+    fontWeight: '700',
+    color: '#48bb78',
+    marginBottom: '2rem'
+  },
+  successCard: {
+    backgroundColor: '#f8fafc',
+    padding: '2rem',
+    borderRadius: '15px',
+    marginBottom: '2rem',
+    textAlign: 'left'
+  },
+  bookingDetail: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '0.5rem 0',
+    borderBottom: '1px solid #e2e8f0'
+  },
+  successAlert: {
+    backgroundColor: '#d1fae5',
+    color: '#065f46',
+    padding: '1rem',
+    borderRadius: '10px',
+    marginBottom: '2rem',
+    fontSize: '0.95rem',
+    border: '1px solid #a7f3d0'
+  },
+  successMessage: {
+    fontSize: '1.1rem',
+    color: '#4a5568',
+    lineHeight: '1.6',
+    marginBottom: '2rem'
+  },
+  homeButton: {
+    padding: '1rem 2rem',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    fontWeight: '600',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  dashboardButton: {
+    padding: '1rem 2rem',
+    backgroundColor: '#10b981',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    fontWeight: '600',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  }
+};
   
 
 export default IntegratedBookingPage;
