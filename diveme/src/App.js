@@ -10,6 +10,8 @@ import Map from './components/map/map';
 import DiveCenter from './components/dive centers/divecenter';
 import Booking from './components/booking page/booking';
 import ActiveBooking from './components/active booking/activebooking';
+import AboutUs from './components/about diveme/about';
+import ContactUs from './components/contact us/contact';
 
 function AppContent() {
   const location = useLocation();
@@ -30,6 +32,8 @@ function AppContent() {
         <Route path="/dive" element={<DiveCenter />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/activebooking" element={<ActiveBooking />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/contact" element={<ContactUs />} />
       </Routes>
 
       {!shouldHideNavbar && <Footer />}

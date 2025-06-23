@@ -48,7 +48,7 @@ export default function DiveMeFooter() {
                   <div className="icon-wrapper">
                     <Clock size={14} />
                   </div>
-                  <p>Open Daily: 6:00 AM - 6:00 PM<br />Dive Season: Nov - Apr</p>
+                  <p>Open Daily: 6:00 AM - 8:00 PM<br />Dive Season: Nov - Apr</p>
                 </div>
               </div>
             </div>

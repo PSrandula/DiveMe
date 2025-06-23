@@ -89,8 +89,8 @@ const ContactUs = () => {
                 </div>
                 <div className="dive-info-details">
                   <h4>Dive Center Hours</h4>
-                  <p>Monday - Friday: 8:00 AM - 8:00 PM</p>
-                  <p>Saturday: 9:00 AM - 2:00 PM</p>
+                  <p>Monday - Friday: 6:00 AM - 8:00 PM</p>
+                  <p>Saturday: 8:00 AM - 2:00 PM</p>
                   <p>Sunday: Closed (except for special dive trips)</p>
                 </div>
               </div>
@@ -588,7 +588,7 @@ const ContactUs = () => {
           }
         }
       `}</style>
-      
+
         </div>
   );
 };
