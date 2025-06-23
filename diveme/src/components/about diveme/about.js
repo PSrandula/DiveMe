@@ -93,3 +93,258 @@ const About = () => {
     </div>
   );
 };
+
+// Styles object
+const styles = {
+  aboutPage: {
+    fontFamily: "'Poppins', sans-serif",
+    color: "#2d3748",
+    backgroundColor: "#f7fafc",
+    overflowX: "hidden",
+  },
+  aboutHero: {
+    position: "relative", 
+    height: "70vh",
+    minHeight: "500px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: "3rem",
+    overflow: "hidden" 
+  },
+  heroImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "90%",
+    objectFit: "cover",
+    filter: "brightness(0.7)",
+    zIndex: 0,
+    borderRadius:25
+  },
+  heroOverlay: {
+    textAlign: "center",
+    color: "white",
+    padding: "2rem",
+    maxWidth: "800px",
+    zIndex: 1,
+    textShadow: "0 2px 10px rgba(0,0,0,0.5)",
+  },
+  heroTitle: {
+    fontSize: "3.5rem",
+    fontWeight: 700,
+    marginBottom: "1.5rem",
+    lineHeight: 1.2,
+  },
+  heroSubtitle: {
+    fontSize: "1.8rem",
+    fontWeight: 400,
+    opacity: 0.9,
+  },
+  mainContent: {
+    padding: "0 2rem",
+    marginBottom: "4rem",
+  },
+
+  contentContainer: {
+    maxWidth: "1200px",
+    margin: "0 auto",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "3rem",
+  },
+  imageSection: {
+    flex: 1,
+    minWidth: "300px",
+    position: "relative",
+  },
+  imageGrid: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  contentImage: {
+    width: "100%",
+    borderRadius: "12px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    objectFit: "cover",
+    height: "300px",
+  },
+  imageCaption: {
+    position: "absolute",
+    bottom: "30px",
+    left: "20px",
+    background: "rgba(0,0,0,0.7)",
+    color: "white",
+    padding: "0.7rem 1.5rem",
+    borderRadius: "30px",
+    fontSize: "1rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.8rem",
+    backdropFilter: "blur(5px)",
+  },
+  captionIcon: {
+    fontSize: "1rem",
+  },
+  textSection: {
+    flex: 1,
+    minWidth: "300px",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "2rem",
+  },
+  card: {
+    background: "white",
+    borderRadius: "16px",
+    padding: "2.5rem",
+    boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+    transition: "all 0.3s ease",
+    position: "relative",
+    overflow: "hidden",
+    borderTop: "5px solid #38b2ac",
+    animation: "fadeIn 0.6s ease forwards",
+  },
+  cardIcon: {
+    width: "60px",
+    height: "60px",
+    borderRadius: "50%",
+    background: "linear-gradient(135deg, #38b2ac, #319795)",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "1.8rem",
+    marginBottom: "1.8rem",
+    boxShadow: "0 5px 15px rgba(56,178,172,0.3)",
+  },
+  icon: {
+    fontSize: "1.4rem",
+  },
+  cardTitle: {
+    fontSize: "1.7rem",
+    fontWeight: 700,
+    marginBottom: "1.2rem",
+    color: "#2d3748",
+  },
+  tagline: {
+    color: "#38b2ac",
+    fontWeight: 600,
+    marginBottom: "1.2rem",
+    fontSize: "1.2rem",
+  },
+  cardText: {
+    marginBottom: "1.5rem",
+    lineHeight: 1.7,
+    color: "#4a5568",
+    fontSize: "1.05rem",
+  },
+  cardList: {
+    listStyle: "none",
+    paddingLeft: 0,
+  },
+  listItem: {
+    marginBottom: "1rem",
+    paddingLeft: "2rem",
+    position: "relative",
+    lineHeight: 1.6,
+    color: "#4a5568",
+    fontSize: "1.05rem",
+  },
+  teamStats: {
+    display: "flex",
+    gap: "2rem",
+    marginTop: "2rem",
+  },
+  statItem: {
+    textAlign: "center",
+  },
+  statNumber: {
+    display: "block",
+    fontSize: "2rem",
+    fontWeight: 700,
+    color: "#38b2ac",
+    marginBottom: "0.3rem",
+  },
+  statLabel: {
+    fontSize: "1rem",
+    color: "#718096",
+  },
+  // Keyframes for animation
+  "@keyframes fadeIn": {
+    from: {
+      opacity: 0,
+      transform: "translateY(30px)",
+    },
+    to: {
+      opacity: 1,
+      transform: "translateY(0)",
+    },
+  },
+};
+
+// Add global styles
+const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+  @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  li::before {
+    content: "•";
+    color: #38b2ac;
+    font-size: 1.8rem;
+    position: absolute;
+    left: 0;
+    top: -5px;
+  }
+  
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem !important;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.4rem !important;
+    }
+    
+    .content-container {
+      flex-direction: column;
+    }
+    
+    .image-section {
+      order: 2;
+      margin-top: 2rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .hero-title {
+      font-size: 2rem !important;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.2rem !important;
+    }
+    
+    .card {
+      padding: 1.8rem !important;
+    }
+  }
+`;
+
+// Inject global styles
+const styleElement = document.createElement("style");
+styleElement.innerHTML = globalStyles;
+document.head.appendChild(styleElement);
+
+export default About;
