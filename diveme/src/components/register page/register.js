@@ -468,7 +468,7 @@ const Register = () => {
                     className="checkbox-input1"
                   />
                   <label htmlFor="termsAccepted" className="checkbox-label1">
-                    I agree to the <a href="#" className="link1">Terms of Service</a> and <a href="#" className="link">Privacy Policy</a>
+                    I agree to the <a href="/terms&condition" className="link1">Terms of Service</a> and <a href="/terms&condition" className="link">Privacy Policy</a>
                   </label>
                 </div>
                 {errors.termsAccepted && <div className="error-message show1">{errors.termsAccepted}</div>}

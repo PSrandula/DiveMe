@@ -58,7 +58,7 @@ export default function DiveMeFooter() {
               <ul className="dm-footer-links">
                 <li><a href="/about">About DiveMe</a></li>
                 <li><a href="/locations">Diving Locations</a></li>
-                <li><a href="/equipment">Equipment Rental</a></li>
+                <li><a href="/terms&condition">Terms & Conditions</a></li>
                 <li><a href="/blog">Diving Blog</a></li>
                 <li><a href="/contact">Contact Us</a></li>
               </ul>
