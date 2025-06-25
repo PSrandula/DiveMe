@@ -13,6 +13,7 @@ import ActiveBooking from './components/active booking/activebooking';
 import AboutUs from './components/about diveme/about';
 import ContactUs from './components/contact us/contact';
 import TermsConditions from './components/terms & conditions/terms&condition';
+import Admin from './components/admin dashboard/admin';
 
 function AppContent() {
   const location = useLocation();
@@ -36,6 +37,7 @@ function AppContent() {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/terms&condition" element={<TermsConditions />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
 
       {!shouldHideNavbar && <Footer />}
