@@ -1,62 +1,53 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const EnhancedActiveBookingPage = () => {
-  const [bookings, setBookings] = useState([
-    {
-      id: 12345,
-      client: "D.R.Koralage",
-      date: "10.06.2025",
-      status: "Confirmed",
-      package: "Turtle Reef Safari",
-      participants: 2,
-      amount: 440,
-      phone: "+94771234567",
-      email: "dr.koralage@email.com"
-    },
-    {
-      id: 12346,
-      client: "M.C.Lakshan",
-      date: "10.06.2025",
-      status: "Pending",
-      package: "Coral Garden Discovery",
-      participants: 1,
-      amount: 180,
-      phone: "+94777654321",
-      email: "lakshan@email.com"
-    },
-    {
-      id: 12347,
-      client: "Yukthi Vithanage",
-      date: "10.06.2025",
-      status: "Cancelled",
-      package: "Deep Sea Adventure",
-      participants: 3,
-      amount: 660,
-      phone: "+94771112233",
-      email: "yukthi@email.com"
-    },
-  ]);
-
-  const [notifications, setNotifications] = useState([
-    "New booking for P.Wijesinghe for 15.06.2025",
-    "Customer feedback received from Kasun Nilaweera",
-    "Booking #12345 has been confirmed",
-  ]);
-
+  const [bookings, setBookings] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [filterStatus, setFilterStatus] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Listen for new bookings from the booking system
   useEffect(() => {
+    const loadBookings = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("diveme_user"));
+        if (!user || !user._id) {
+          console.error("User not found in localStorage");
+          return;
+        }
+        const userId = user._id;
+        const res = await axios.get(
+          `http://localhost:5000/api/bookings/user/${userId}`
+        );
+        const formatted = res.data.map((b) => ({
+          id: b._id,
+          client: `${b.personalDetails.firstName} ${b.personalDetails.lastName}`,
+          date: new Date(b.selectedDate).toLocaleDateString("en-GB"),
+          status: b.status || "Pending",
+          package: b.packageName,
+          participants: b.participants,
+          amount: b.totalAmount,
+          phone: b.personalDetails.phone,
+          email: b.personalDetails.email,
+          experience: b.personalDetails.experience,
+          medicalConditions: b.personalDetails.medicalConditions,
+          specialRequests: b.specialRequests,
+        }));
+        setBookings(formatted);
+      } catch (err) {
+        console.error("Failed to fetch bookings", err);
+      }
+    };
+
     const handleNewBooking = (event) => {
       const newBooking = event.detail;
-      const bookingId = Date.now();
-      
+      const bookingId = newBooking.id || Date.now();
+
       const formattedBooking = {
         id: bookingId,
         client: `${newBooking.personalDetails.firstName} ${newBooking.personalDetails.lastName}`,
-        date: new Date(newBooking.selectedDate).toLocaleDateString('en-GB'),
+        date: new Date(newBooking.selectedDate).toLocaleDateString("en-GB"),
         status: "Pending",
         package: newBooking.packageName,
         participants: newBooking.participants,
@@ -65,25 +56,25 @@ const EnhancedActiveBookingPage = () => {
         email: newBooking.personalDetails.email,
         experience: newBooking.personalDetails.experience,
         medicalConditions: newBooking.personalDetails.medicalConditions,
-        specialRequests: newBooking.specialRequests
+        specialRequests: newBooking.specialRequests,
       };
 
-      setBookings(prev => [formattedBooking, ...prev]);
-      setNotifications(prev => [
+      setBookings((prev) => [formattedBooking, ...prev]);
+      setNotifications((prev) => [
         `New booking #${bookingId} from ${formattedBooking.client}`,
-        ...prev.slice(0, 4)
+        ...prev.slice(0, 4),
       ]);
     };
 
-    // Check for stored bookings on component mount
-    const checkStoredBookings = () => {
-      const storedBookings = JSON.parse(window.localStorage.getItem('completedBookings') || '[]');
-      if (storedBookings.length > 0) {
-        // Add stored bookings to current bookings
-        const newBookings = storedBookings.map(booking => ({
+    const checkStored = () => {
+      const stored = JSON.parse(
+        localStorage.getItem("completedBookings") || "[]"
+      );
+      if (stored.length > 0) {
+        const newOnes = stored.map((booking) => ({
           id: booking.id,
           client: `${booking.personalDetails.firstName} ${booking.personalDetails.lastName}`,
-          date: new Date(booking.selectedDate).toLocaleDateString('en-GB'),
+          date: new Date(booking.selectedDate).toLocaleDateString("en-GB"),
           status: "Pending",
           package: booking.packageName,
           participants: booking.participants,
@@ -92,84 +83,97 @@ const EnhancedActiveBookingPage = () => {
           email: booking.personalDetails.email,
           experience: booking.personalDetails.experience,
           medicalConditions: booking.personalDetails.medicalConditions,
-          specialRequests: booking.specialRequests
+          specialRequests: booking.specialRequests,
         }));
-        
-        setBookings(prev => [...newBookings, ...prev]);
-        setNotifications(prev => [
-          ...storedBookings.map(booking => `New booking #${booking.id} from ${booking.personalDetails.firstName} ${booking.personalDetails.lastName}`),
-          ...prev
+
+        setBookings((prev) => [...newOnes, ...prev]);
+        setNotifications((prev) => [
+          ...stored.map(
+            (b) =>
+              `New booking #${b.id} from ${b.personalDetails.firstName} ${b.personalDetails.lastName}`
+          ),
+          ...prev,
         ]);
-        
-        // Clear stored bookings after processing
-        window.localStorage.removeItem('completedBookings');
+
+        localStorage.removeItem("completedBookings");
       }
     };
 
-    // Check immediately and then listen for events
-    checkStoredBookings();
-    window.addEventListener('newBooking', handleNewBooking);
-    
-    // Also check periodically for new stored bookings
-    const intervalId = setInterval(checkStoredBookings, 1000);
-    
-    // Cleanup
+    loadBookings();
+    checkStored();
+    window.addEventListener("newBooking", handleNewBooking);
+    const interval = setInterval(checkStored, 1000);
+
     return () => {
-      window.removeEventListener('newBooking', handleNewBooking);
-      clearInterval(intervalId);
+      window.removeEventListener("newBooking", handleNewBooking);
+      clearInterval(interval);
     };
   }, []);
 
-  // Status update handler
-  const updateBookingStatus = (bookingId, newStatus) => {
-    setBookings(prev => prev.map(booking => 
-      booking.id === bookingId 
-        ? { ...booking, status: newStatus }
-        : booking
-    ));
-    
-    const booking = bookings.find(b => b.id === bookingId);
+  const updateBookingStatus = async (bookingId, newStatus) => {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+    );
+
+    const booking = bookings.find((b) => b.id === bookingId);
     if (booking) {
-      setNotifications(prev => [
+      setNotifications((prev) => [
         `Booking #${bookingId} status updated to ${newStatus}`,
-        ...prev.slice(0, 4)
+        ...prev.slice(0, 4),
       ]);
+      try {
+        await axios.put(
+          `http://localhost:5000/api/bookings/${bookingId}/status`,
+          { status: newStatus }
+        );
+      } catch (err) {
+        console.error("Failed to update status on backend", err);
+      }
     }
   };
-
   // Filter bookings based on status and search
-  const filteredBookings = bookings.filter(booking => {
-    const matchesStatus = filterStatus === "All" || booking.status === filterStatus;
-    const matchesSearch = booking.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.id.toString().includes(searchTerm);
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesStatus =
+      filterStatus === "All" || booking.status === filterStatus;
+    const matchesSearch =
+      booking.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.id.toString().includes(searchTerm);
     return matchesStatus && matchesSearch;
   });
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Confirmed": return "#10b981";
-      case "Pending": return "#f59e0b";
-      case "Cancelled": return "#ef4444";
-      default: return "#6b7280";
+      case "Confirmed":
+        return "#10b981";
+      case "Pending":
+        return "#f59e0b";
+      case "Cancelled":
+        return "#ef4444";
+      default:
+        return "#6b7280";
     }
   };
 
   const getStatusBg = (status) => {
     switch (status) {
-      case "Confirmed": return "#d1fae5";
-      case "Pending": return "#fef3c7";
-      case "Cancelled": return "#fee2e2";
-      default: return "#f3f4f6";
+      case "Confirmed":
+        return "#d1fae5";
+      case "Pending":
+        return "#fef3c7";
+      case "Cancelled":
+        return "#fee2e2";
+      default:
+        return "#f3f4f6";
     }
   };
 
   const getTotalStats = () => {
-    const confirmed = bookings.filter(b => b.status === "Confirmed").length;
-    const pending = bookings.filter(b => b.status === "Pending").length;
+    const confirmed = bookings.filter((b) => b.status === "Confirmed").length;
+    const pending = bookings.filter((b) => b.status === "Pending").length;
     const totalRevenue = bookings
-      .filter(b => b.status === "Confirmed")
+      .filter((b) => b.status === "Confirmed")
       .reduce((sum, b) => sum + b.amount, 0);
-    
+
     return { confirmed, pending, totalRevenue, total: bookings.length };
   };
 
@@ -218,13 +222,13 @@ const EnhancedActiveBookingPage = () => {
             />
           </div>
           <div style={styles.filterButtons}>
-            {["All", "Pending", "Confirmed", "Cancelled"].map(status => (
+            {["All", "Pending", "Confirmed", "Cancelled"].map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
                 style={{
                   ...styles.filterButton,
-                  ...(filterStatus === status ? styles.filterButtonActive : {})
+                  ...(filterStatus === status ? styles.filterButtonActive : {}),
                 }}
               >
                 {status}
@@ -237,13 +241,15 @@ const EnhancedActiveBookingPage = () => {
           {/* Bookings List */}
           <section style={styles.bookingsSection}>
             <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>Bookings ({filteredBookings.length})</h2>
+              <h2 style={styles.sectionTitle}>
+                Bookings ({filteredBookings.length})
+              </h2>
             </div>
-            
+
             <div style={styles.bookingsList}>
               {filteredBookings.map((booking) => (
-                <div 
-                  key={booking.id} 
+                <div
+                  key={booking.id}
                   style={styles.bookingCard}
                   onClick={() => setSelectedBooking(booking)}
                 >
@@ -253,18 +259,18 @@ const EnhancedActiveBookingPage = () => {
                       <p style={styles.clientName}>{booking.client}</p>
                     </div>
                     <div style={styles.statusContainer}>
-                      <span 
+                      <span
                         style={{
                           ...styles.statusBadge,
                           backgroundColor: getStatusBg(booking.status),
-                          color: getStatusColor(booking.status)
+                          color: getStatusColor(booking.status),
                         }}
                       >
                         {booking.status}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div style={styles.bookingDetails}>
                     <div style={styles.detailRow}>
                       <span style={styles.detailLabel}>Package:</span>
@@ -276,7 +282,9 @@ const EnhancedActiveBookingPage = () => {
                     </div>
                     <div style={styles.detailRow}>
                       <span style={styles.detailLabel}>Participants:</span>
-                      <span style={styles.detailValue}>{booking.participants}</span>
+                      <span style={styles.detailValue}>
+                        {booking.participants}
+                      </span>
                     </div>
                     <div style={styles.detailRow}>
                       <span style={styles.detailLabel}>Amount:</span>
@@ -286,7 +294,7 @@ const EnhancedActiveBookingPage = () => {
 
                   {booking.status === "Pending" && (
                     <div style={styles.actionButtons}>
-                      <button 
+                      <button
                         style={styles.confirmButton}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -295,7 +303,7 @@ const EnhancedActiveBookingPage = () => {
                       >
                         Confirm
                       </button>
-                      <button 
+                      <button
                         style={styles.cancelButton}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -320,7 +328,9 @@ const EnhancedActiveBookingPage = () => {
                 <div style={styles.metricItem}>
                   <div style={styles.metricIcon}>📊</div>
                   <div>
-                    <div style={styles.metricValue}>{stats.confirmed}/{stats.total}</div>
+                    <div style={styles.metricValue}>
+                      {stats.confirmed}/{stats.total}
+                    </div>
                     <div style={styles.metricLabel}>Conversion Rate</div>
                   </div>
                 </div>
@@ -359,11 +369,14 @@ const EnhancedActiveBookingPage = () => {
 
       {/* Booking Detail Modal */}
       {selectedBooking && (
-        <div style={styles.modalOverlay} onClick={() => setSelectedBooking(null)}>
+        <div
+          style={styles.modalOverlay}
+          onClick={() => setSelectedBooking(null)}
+        >
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2>Booking Details #{selectedBooking.id}</h2>
-              <button 
+              <button
                 style={styles.closeButton}
                 onClick={() => setSelectedBooking(null)}
               >
@@ -373,27 +386,46 @@ const EnhancedActiveBookingPage = () => {
             <div style={styles.modalContent}>
               <div style={styles.modalSection}>
                 <h4>Customer Information</h4>
-                <p><strong>Name:</strong> {selectedBooking.client}</p>
-                <p><strong>Email:</strong> {selectedBooking.email}</p>
-                <p><strong>Phone:</strong> {selectedBooking.phone}</p>
+                <p>
+                  <strong>Name:</strong> {selectedBooking.client}
+                </p>
+                <p>
+                  <strong>Email:</strong> {selectedBooking.email}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {selectedBooking.phone}
+                </p>
                 {selectedBooking.experience && (
-                  <p><strong>Experience:</strong> {selectedBooking.experience}</p>
+                  <p>
+                    <strong>Experience:</strong> {selectedBooking.experience}
+                  </p>
                 )}
               </div>
-              
+
               <div style={styles.modalSection}>
                 <h4>Booking Information</h4>
-                <p><strong>Package:</strong> {selectedBooking.package}</p>
-                <p><strong>Date:</strong> {selectedBooking.date}</p>
-                <p><strong>Participants:</strong> {selectedBooking.participants}</p>
-                <p><strong>Amount:</strong> ${selectedBooking.amount}</p>
-                <p><strong>Status:</strong> 
-                  <span style={{
-                    ...styles.statusBadge,
-                    backgroundColor: getStatusBg(selectedBooking.status),
-                    color: getStatusColor(selectedBooking.status),
-                    marginLeft: '8px'
-                  }}>
+                <p>
+                  <strong>Package:</strong> {selectedBooking.package}
+                </p>
+                <p>
+                  <strong>Date:</strong> {selectedBooking.date}
+                </p>
+                <p>
+                  <strong>Participants:</strong> {selectedBooking.participants}
+                </p>
+                <p>
+                  <strong>Amount:</strong> ${selectedBooking.amount}
+                </p>
+                <p>
+                  <strong>Status:</strong>
+                  <span
+                    style={{
+                      ...styles.statusBadge,
+                      backgroundColor: getStatusBg(selectedBooking.status),
+                      color: getStatusColor(selectedBooking.status),
+                      marginLeft: "8px",
+                    }}
+                  >
                     {selectedBooking.status}
                   </span>
                 </p>
@@ -415,7 +447,7 @@ const EnhancedActiveBookingPage = () => {
 
               {selectedBooking.status === "Pending" && (
                 <div style={styles.modalActions}>
-                  <button 
+                  <button
                     style={styles.confirmButton}
                     onClick={() => {
                       updateBookingStatus(selectedBooking.id, "Confirmed");
@@ -424,7 +456,7 @@ const EnhancedActiveBookingPage = () => {
                   >
                     Confirm Booking
                   </button>
-                  <button 
+                  <button
                     style={styles.cancelButton}
                     onClick={() => {
                       updateBookingStatus(selectedBooking.id, "Cancelled");
@@ -445,322 +477,322 @@ const EnhancedActiveBookingPage = () => {
 
 const styles = {
   container: {
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-  backgroundColor: '#f8fafc',
-  minHeight: '100vh',
-  color: '#1e293b',
-  paddingTop: '5rem' 
-},
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    backgroundColor: "#f8fafc",
+    minHeight: "100vh",
+    color: "#1e293b",
+    paddingTop: "5rem",
+  },
   header: {
-    background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
-    color: 'white',
-    padding: '2rem'
+    background: "linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)",
+    color: "white",
+    padding: "2rem",
   },
   headerContent: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '2rem'
+    maxWidth: "1200px",
+    margin: "0 auto",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: "2rem",
   },
   title: {
-    fontSize: '2.5rem',
-    fontWeight: '700',
-    margin: '0 0 0.5rem 0'
+    fontSize: "2.5rem",
+    fontWeight: "700",
+    margin: "0 0 0.5rem 0",
   },
   subtitle: {
-    fontSize: '1.1rem',
+    fontSize: "1.1rem",
     opacity: 0.9,
-    margin: 0
+    margin: 0,
   },
   statsOverview: {
-    display: 'flex',
-    gap: '2rem'
+    display: "flex",
+    gap: "2rem",
   },
   statItem: {
-    textAlign: 'center'
+    textAlign: "center",
   },
   statNumber: {
-    display: 'block',
-    fontSize: '2rem',
-    fontWeight: '700'
+    display: "block",
+    fontSize: "2rem",
+    fontWeight: "700",
   },
   statLabel: {
-    fontSize: '0.9rem',
-    opacity: 0.8
+    fontSize: "0.9rem",
+    opacity: 0.8,
   },
   mainContent: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '2rem'
+    maxWidth: "1200px",
+    margin: "0 auto",
+    padding: "2rem",
   },
   controlsBar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '2rem',
-    gap: '1rem',
-    flexWrap: 'wrap'
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "2rem",
+    gap: "1rem",
+    flexWrap: "wrap",
   },
   searchBox: {
     flex: 1,
-    maxWidth: '400px'
+    maxWidth: "400px",
   },
   searchInput: {
-    width: '100%',
-    padding: '0.75rem 1rem',
-    border: '2px solid #e2e8f0',
-    borderRadius: '10px',
-    fontSize: '1rem',
-    boxSizing: 'border-box'
+    width: "100%",
+    padding: "0.75rem 1rem",
+    border: "2px solid #e2e8f0",
+    borderRadius: "10px",
+    fontSize: "1rem",
+    boxSizing: "border-box",
   },
   filterButtons: {
-    display: 'flex',
-    gap: '0.5rem'
+    display: "flex",
+    gap: "0.5rem",
   },
   filterButton: {
-    padding: '0.5rem 1rem',
-    border: '2px solid #e2e8f0',
-    borderRadius: '8px',
-    backgroundColor: 'white',
-    cursor: 'pointer',
-    fontWeight: '500',
-    transition: 'all 0.2s'
+    padding: "0.5rem 1rem",
+    border: "2px solid #e2e8f0",
+    borderRadius: "8px",
+    backgroundColor: "white",
+    cursor: "pointer",
+    fontWeight: "500",
+    transition: "all 0.2s",
   },
   filterButtonActive: {
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    borderColor: '#3b82f6'
+    backgroundColor: "#3b82f6",
+    color: "white",
+    borderColor: "#3b82f6",
   },
   contentLayout: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr',
-    gap: '2rem'
+    display: "grid",
+    gridTemplateColumns: "2fr 1fr",
+    gap: "2rem",
   },
   bookingsSection: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+    backgroundColor: "white",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
   },
   sectionHeader: {
-    marginBottom: '1.5rem'
+    marginBottom: "1.5rem",
   },
   sectionTitle: {
-    fontSize: '1.5rem',
-    fontWeight: '600',
-    margin: 0
+    fontSize: "1.5rem",
+    fontWeight: "600",
+    margin: 0,
   },
   bookingsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem'
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
   },
   bookingCard: {
-    border: '2px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    backgroundColor: 'white'
+    border: "2px solid #e2e8f0",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    backgroundColor: "white",
   },
   bookingHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '1rem'
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: "1rem",
   },
   bookingId: {
-    fontSize: '1.2rem',
-    fontWeight: '700',
-    margin: '0 0 0.25rem 0',
-    color: '#3b82f6'
+    fontSize: "1.2rem",
+    fontWeight: "700",
+    margin: "0 0 0.25rem 0",
+    color: "#3b82f6",
   },
   clientName: {
-    fontSize: '1rem',
-    fontWeight: '500',
+    fontSize: "1rem",
+    fontWeight: "500",
     margin: 0,
-    color: '#4b5563'
+    color: "#4b5563",
   },
   statusContainer: {
-    display: 'flex',
-    alignItems: 'center'
+    display: "flex",
+    alignItems: "center",
   },
   statusBadge: {
-    padding: '0.25rem 0.75rem',
-    borderRadius: '20px',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em'
+    padding: "0.25rem 0.75rem",
+    borderRadius: "20px",
+    fontSize: "0.8rem",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
   },
   bookingDetails: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '0.5rem',
-    marginBottom: '1rem'
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "0.5rem",
+    marginBottom: "1rem",
   },
   detailRow: {
-    display: 'flex',
-    justifyContent: 'space-between'
+    display: "flex",
+    justifyContent: "space-between",
   },
   detailLabel: {
-    fontSize: '0.9rem',
-    color: '#6b7280',
-    fontWeight: '500'
+    fontSize: "0.9rem",
+    color: "#6b7280",
+    fontWeight: "500",
   },
   detailValue: {
-    fontSize: '0.9rem',
-    fontWeight: '600'
+    fontSize: "0.9rem",
+    fontWeight: "600",
   },
   amountValue: {
-    fontSize: '0.9rem',
-    fontWeight: '700',
-    color: '#059669'
+    fontSize: "0.9rem",
+    fontWeight: "700",
+    color: "#059669",
   },
   actionButtons: {
-    display: 'flex',
-    gap: '0.5rem',
-    marginTop: '1rem'
+    display: "flex",
+    gap: "0.5rem",
+    marginTop: "1rem",
   },
   confirmButton: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    transition: 'background-color 0.2s'
+    padding: "0.5rem 1rem",
+    backgroundColor: "#10b981",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    fontWeight: "600",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    transition: "background-color 0.2s",
   },
   cancelButton: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    transition: 'background-color 0.2s'
+    padding: "0.5rem 1rem",
+    backgroundColor: "#ef4444",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    fontWeight: "600",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    transition: "background-color 0.2s",
   },
   sidebar: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.5rem'
+    display: "flex",
+    flexDirection: "column",
+    gap: "1.5rem",
   },
   sidebarCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+    backgroundColor: "white",
+    borderRadius: "12px",
+    padding: "1.5rem",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
   },
   sidebarTitle: {
-    fontSize: '1.2rem',
-    fontWeight: '600',
-    margin: '0 0 1rem 0'
+    fontSize: "1.2rem",
+    fontWeight: "600",
+    margin: "0 0 1rem 0",
   },
   metricsContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem'
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
   },
   metricItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem'
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
   },
   metricIcon: {
-    fontSize: '1.5rem'
+    fontSize: "1.5rem",
   },
   metricValue: {
-    fontSize: '1.1rem',
-    fontWeight: '700',
-    color: '#1e293b'
+    fontSize: "1.1rem",
+    fontWeight: "700",
+    color: "#1e293b",
   },
   metricLabel: {
-    fontSize: '0.8rem',
-    color: '#6b7280'
+    fontSize: "0.8rem",
+    color: "#6b7280",
   },
   notificationsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem'
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.75rem",
   },
   notificationItem: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.75rem'
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "0.75rem",
   },
   notificationDot: {
-    width: '8px',
-    height: '8px',
-    backgroundColor: '#3b82f6',
-    borderRadius: '50%',
-    marginTop: '0.25rem',
-    flexShrink: 0
+    width: "8px",
+    height: "8px",
+    backgroundColor: "#3b82f6",
+    borderRadius: "50%",
+    marginTop: "0.25rem",
+    flexShrink: 0,
   },
   notificationText: {
-    fontSize: '0.9rem',
+    fontSize: "0.9rem",
     margin: 0,
-    lineHeight: '1.4',
-    color: '#4b5563'
+    lineHeight: "1.4",
+    color: "#4b5563",
   },
   modalOverlay: {
-    position: 'fixed',
+    position: "fixed",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
   },
   modal: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    width: '90%',
-    maxWidth: '600px',
-    maxHeight: '80vh',
-    overflow: 'hidden',
-    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)'
+    backgroundColor: "white",
+    borderRadius: "12px",
+    width: "90%",
+    maxWidth: "600px",
+    maxHeight: "80vh",
+    overflow: "hidden",
+    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)",
   },
   modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1.5rem',
-    borderBottom: '1px solid #e2e8f0',
-    backgroundColor: '#f8fafc'
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "1.5rem",
+    borderBottom: "1px solid #e2e8f0",
+    backgroundColor: "#f8fafc",
   },
   closeButton: {
-    background: 'none',
-    border: 'none',
-    fontSize: '1.5rem',
-    cursor: 'pointer',
-    color: '#6b7280',
-    padding: '0.5rem'
+    background: "none",
+    border: "none",
+    fontSize: "1.5rem",
+    cursor: "pointer",
+    color: "#6b7280",
+    padding: "0.5rem",
   },
   modalContent: {
-    padding: '1.5rem',
-    overflowY: 'auto',
-    maxHeight: 'calc(80vh - 120px)'
+    padding: "1.5rem",
+    overflowY: "auto",
+    maxHeight: "calc(80vh - 120px)",
   },
   modalSection: {
-    marginBottom: '1.5rem'
+    marginBottom: "1.5rem",
   },
   modalActions: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '2rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid #e2e8f0'
-  }
+    display: "flex",
+    gap: "1rem",
+    marginTop: "2rem",
+    paddingTop: "1rem",
+    borderTop: "1px solid #e2e8f0",
+  },
 };
 
 export default EnhancedActiveBookingPage;
