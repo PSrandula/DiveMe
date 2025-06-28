@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 // import './register.css';
 
 const Register = () => {
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
-    userType: 'tourist',
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    businessName: '',
-    businessAddress: '',
-    termsAccepted: false
+    userType: "tourist",
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    businessName: "",
+    businessAddress: "",
+    termsAccepted: false,
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -24,21 +24,21 @@ const Register = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
+
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleUserTypeChange = (userType) => {
-    setFormData(prev => ({ ...prev, userType }));
-    
-    if (userType === 'tourist') {
-      setErrors(prev => {
+    setFormData((prev) => ({ ...prev, userType }));
+
+    if (userType === "tourist") {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors.businessName;
         delete newErrors.businessLicense;
@@ -59,11 +59,11 @@ const Register = () => {
   };
 
   const getPasswordStrengthText = (strength) => {
-    const levels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-    const colors = ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#10b981'];
-    return { 
-      text: levels[strength] || 'Very Weak', 
-      color: colors[strength] || '#ef4444' 
+    const levels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
+    const colors = ["#ef4444", "#f97316", "#eab308", "#3b82f6", "#10b981"];
+    return {
+      text: levels[strength] || "Very Weak",
+      color: colors[strength] || "#ef4444",
     };
   };
 
@@ -74,31 +74,33 @@ const Register = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.firstName) newErrors.firstName = 'First name is required';
-    if (!formData.lastName) newErrors.lastName = 'Last name is required';
+
+    if (!formData.firstName) newErrors.firstName = "First name is required";
+    if (!formData.lastName) newErrors.lastName = "Last name is required";
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = "Password must be at least 8 characters";
     }
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
     if (!formData.termsAccepted) {
-      newErrors.termsAccepted = 'You must accept the terms and conditions';
+      newErrors.termsAccepted = "You must accept the terms and conditions";
     }
 
-    if (formData.userType === 'admin') {
-      if (!formData.businessName) newErrors.businessName = 'Business name is required';
-      if (!formData.businessAddress) newErrors.businessAddress = 'Business address is required';
+    if (formData.userType === "admin") {
+      if (!formData.businessName)
+        newErrors.businessName = "Business name is required";
+      if (!formData.businessAddress)
+        newErrors.businessAddress = "Business address is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -106,43 +108,69 @@ const Register = () => {
   const simulateRegistration = () => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        console.log('Registration successful:', formData);
+        console.log("Registration successful:", formData);
         resolve();
       }, 2000);
     });
   };
 
   const handleFormSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (isLoading) return;
-  if (!validateForm()) return;
+    if (isLoading) return;
+    if (!validateForm()) return;
 
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    await simulateRegistration();
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          password: formData.password,
+          userType: formData.userType,
+          businessName:
+            formData.userType === "admin" ? formData.businessName : undefined,
+          businessAddress:
+            formData.userType === "admin"
+              ? formData.businessAddress
+              : undefined,
+        }),
+      });
 
-    setTimeout(() => {
-      alert(`Welcome to DiveME! Your ${formData.userType} account has been created successfully.`);
-      navigate('/');
-    }, 1000);
+      const data = await response.json();
 
-  } catch (error) {
-    console.error('Registration failed:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
 
+      localStorage.setItem("token", data.token);
+
+      setTimeout(() => {
+        alert(
+          `Welcome to DiveME! Your ${formData.userType} account has been created successfully.`
+        );
+        navigate("/");
+      }, 1000);
+    } catch (error) {
+      console.error("Registration failed:", error.message);
+      alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLoginClick = (e) => {
     e.preventDefault();
-    navigate('/');
+    navigate("/");
   };
 
   const handleKeyPress = (e, nextFieldId) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       if (nextFieldId) {
         document.getElementById(nextFieldId)?.focus();
@@ -170,27 +198,51 @@ const Register = () => {
                 <p className="brand-subtitle1">Discover the underwater world</p>
               </div>
             </div>
-            
+
             <div className="features-preview1">
               <div className="feature-item1">
-                <svg className="feature-icon1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                <svg
+                  className="feature-icon1"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
                 <span>Premium Diving Experiences</span>
               </div>
               <div className="feature-item1">
-                <svg className="feature-icon1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <svg
+                  className="feature-icon1"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
                 <span>Expert Dive Guides</span>
               </div>
               <div className="feature-item1">
-                <svg className="feature-icon1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
+                <svg
+                  className="feature-icon1"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
                 <span>Stunning Dive Locations</span>
               </div>
@@ -213,10 +265,20 @@ const Register = () => {
                 <div className="user-type-buttons1">
                   <button
                     type="button"
-                    className={`user-type-btn1 ${formData.userType === 'tourist' ? 'active' : ''}`}
-                    onClick={() => handleUserTypeChange('tourist')}
+                    className={`user-type-btn1 ${
+                      formData.userType === "tourist" ? "active" : ""
+                    }`}
+                    onClick={() => handleUserTypeChange("tourist")}
                   >
-                    <svg className="icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="icon1"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
@@ -224,10 +286,20 @@ const Register = () => {
                   </button>
                   <button
                     type="button"
-                    className={`user-type-btn1 ${formData.userType === 'admin' ? 'active admin' : ''}`}
-                    onClick={() => handleUserTypeChange('admin')}
+                    className={`user-type-btn1 ${
+                      formData.userType === "admin" ? "active admin" : ""
+                    }`}
+                    onClick={() => handleUserTypeChange("admin")}
                   >
-                    <svg className="icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="icon1"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M3 21h18"></path>
                       <path d="M5 21V7l8-4v18"></path>
                       <path d="M19 21V11l-6-4"></path>
@@ -240,9 +312,19 @@ const Register = () => {
               {/* Name Fields */}
               <div className="form-row1">
                 <div className="form-group1">
-                  <label htmlFor="firstName" className="form-label1">First Name</label>
+                  <label htmlFor="firstName" className="form-label1">
+                    First Name
+                  </label>
                   <div className="input-wrapper1">
-                    <svg className="input-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="input-icon1"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
@@ -253,18 +335,32 @@ const Register = () => {
                       placeholder="Enter your first name"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      onKeyPress={(e) => handleKeyPress(e, 'lastName')}
-                      className={errors.firstName1 ? 'error' : ''}
+                      onKeyPress={(e) => handleKeyPress(e, "lastName")}
+                      className={errors.firstName1 ? "error" : ""}
                       required
                     />
                   </div>
-                  {errors.firstName && <div className="error-message show1">{errors.firstName}</div>}
+                  {errors.firstName && (
+                    <div className="error-message show1">
+                      {errors.firstName}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group1">
-                  <label htmlFor="lastName" className="form-label1">Last Name</label>
+                  <label htmlFor="lastName" className="form-label1">
+                    Last Name
+                  </label>
                   <div className="input-wrapper1">
-                    <svg className="input-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="input-icon1"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
@@ -275,22 +371,34 @@ const Register = () => {
                       placeholder="Enter your last name"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      onKeyPress={(e) => handleKeyPress(e, 'email')}
-                      className={errors.lastName1 ? 'error' : ''}
+                      onKeyPress={(e) => handleKeyPress(e, "email")}
+                      className={errors.lastName1 ? "error" : ""}
                       required
                     />
                   </div>
-                  {errors.lastName && <div className="error-message show1">{errors.lastName}</div>}
+                  {errors.lastName && (
+                    <div className="error-message show1">{errors.lastName}</div>
+                  )}
                 </div>
               </div>
 
               {/* Admin Business Fields */}
-              {formData.userType === 'admin' && (
+              {formData.userType === "admin" && (
                 <>
                   <div className="form-group1">
-                    <label htmlFor="businessName" className="form-label1">Business Name</label>
+                    <label htmlFor="businessName" className="form-label1">
+                      Business Name
+                    </label>
                     <div className="input-wrapper1">
-                      <svg className="input-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg
+                        className="input-icon1"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
                         <path d="M3 21h18"></path>
                         <path d="M5 21V7l8-4v18"></path>
                         <path d="M19 21V11l-6-4"></path>
@@ -302,19 +410,33 @@ const Register = () => {
                         placeholder="Enter your business name"
                         value={formData.businessName}
                         onChange={handleInputChange}
-                        className={errors.businessName1 ? 'error' : ''}
+                        className={errors.businessName1 ? "error" : ""}
                         required
                       />
                     </div>
-                    {errors.businessName && <div className="error-message show1">{errors.businessName}</div>}
+                    {errors.businessName && (
+                      <div className="error-message show1">
+                        {errors.businessName}
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group1">
-                    <label htmlFor="businessAddress" className="form-label1">Business Address</label>
+                    <label htmlFor="businessAddress" className="form-label1">
+                      Business Address
+                    </label>
                     <div className="input-wrapper1">
-                      <svg className="input-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                        <circle cx="12" cy="10" r="3"/>
+                      <svg
+                        className="input-icon1"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
                       </svg>
                       <input
                         type="text"
@@ -323,20 +445,34 @@ const Register = () => {
                         placeholder="Enter your business address"
                         value={formData.businessAddress}
                         onChange={handleInputChange}
-                        className={errors.businessAddress1 ? 'error' : ''}
+                        className={errors.businessAddress1 ? "error" : ""}
                         required
                       />
                     </div>
-                    {errors.businessAddress && <div className="error-message show1">{errors.businessAddress}</div>}
+                    {errors.businessAddress && (
+                      <div className="error-message show1">
+                        {errors.businessAddress}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
 
               {/* Email */}
               <div className="form-group1">
-                <label htmlFor="email" className="form-label1">Email Address</label>
+                <label htmlFor="email" className="form-label1">
+                  Email Address
+                </label>
                 <div className="input-wrapper1">
-                  <svg className="input-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="input-icon1"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
@@ -347,32 +483,51 @@ const Register = () => {
                     placeholder="Enter your email address"
                     value={formData.email}
                     onChange={handleInputChange}
-                    onKeyPress={(e) => handleKeyPress(e, 'phone')}
-                    className={errors.email1 ? 'error' : ''}
+                    onKeyPress={(e) => handleKeyPress(e, "phone")}
+                    className={errors.email1 ? "error" : ""}
                     required
                   />
                 </div>
-                {errors.email && <div className="error-message show1">{errors.email}</div>}
+                {errors.email && (
+                  <div className="error-message show1">{errors.email}</div>
+                )}
               </div>
 
               {/* Password */}
               <div className="form-group1">
-                <label htmlFor="password" className="form-label1">Password</label>
+                <label htmlFor="password" className="form-label1">
+                  Password
+                </label>
                 <div className="input-wrapper1">
-                  <svg className="input-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <svg
+                    className="input-icon1"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect
+                      x="3"
+                      y="11"
+                      width="18"
+                      height="11"
+                      rx="2"
+                      ry="2"
+                    ></rect>
                     <circle cx="12" cy="16" r="1"></circle>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     id="password"
                     name="password"
                     placeholder="Create a strong password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    onKeyPress={(e) => handleKeyPress(e, 'confirmPassword')}
-                    className={errors.password1 ? 'error' : ''}
+                    onKeyPress={(e) => handleKeyPress(e, "confirmPassword")}
+                    className={errors.password1 ? "error" : ""}
                     required
                   />
                   <button
@@ -380,7 +535,15 @@ const Register = () => {
                     className="password-toggle1"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    <svg className="eye-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="eye-icon1"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       {showPassword ? (
                         <>
                           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
@@ -398,39 +561,61 @@ const Register = () => {
                 {formData.password && (
                   <div className="password-strength1">
                     <div className="strength-bar1">
-                      <div 
+                      <div
                         className="strength-fill1"
-                        style={{ 
+                        style={{
                           width: `${(passwordStrength / 5) * 100}%`,
-                          backgroundColor: strengthInfo.color
+                          backgroundColor: strengthInfo.color,
                         }}
                       ></div>
                     </div>
-                    <span className="strength-text1" style={{ color: strengthInfo.color }}>
+                    <span
+                      className="strength-text1"
+                      style={{ color: strengthInfo.color }}
+                    >
                       {strengthInfo.text}
                     </span>
                   </div>
                 )}
-                {errors.password && <div className="error-message show1">{errors.password}</div>}
+                {errors.password && (
+                  <div className="error-message show1">{errors.password}</div>
+                )}
               </div>
 
               {/* Confirm Password */}
               <div className="form-group1">
-                <label htmlFor="confirmPassword" className="form-label1">Confirm Password</label>
+                <label htmlFor="confirmPassword" className="form-label1">
+                  Confirm Password
+                </label>
                 <div className="input-wrapper1">
-                  <svg className="input-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <svg
+                    className="input-icon1"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect
+                      x="3"
+                      y="11"
+                      width="18"
+                      height="11"
+                      rx="2"
+                      ry="2"
+                    ></rect>
                     <circle cx="12" cy="16" r="1"></circle>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
                   <input
-                    type={showConfirmPassword ? 'text' : 'password'}
+                    type={showConfirmPassword ? "text" : "password"}
                     id="confirmPassword1"
                     name="confirmPassword"
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={errors.confirmPassword1 ? 'error' : ''}
+                    className={errors.confirmPassword1 ? "error" : ""}
                     required
                   />
                   <button
@@ -438,7 +623,15 @@ const Register = () => {
                     className="password-toggle1"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    <svg className="eye-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="eye-icon1"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       {showConfirmPassword ? (
                         <>
                           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
@@ -453,7 +646,11 @@ const Register = () => {
                     </svg>
                   </button>
                 </div>
-                {errors.confirmPassword && <div className="error-message show1">{errors.confirmPassword}</div>}
+                {errors.confirmPassword && (
+                  <div className="error-message show1">
+                    {errors.confirmPassword}
+                  </div>
+                )}
               </div>
 
               {/* Terms Agreement */}
@@ -468,26 +665,53 @@ const Register = () => {
                     className="checkbox-input1"
                   />
                   <label htmlFor="termsAccepted" className="checkbox-label1">
-                    I agree to the <a href="/terms&condition" className="link1">Terms of Service</a> and <a href="/terms&condition" className="link">Privacy Policy</a>
+                    I agree to the{" "}
+                    <a href="/terms&condition" className="link1">
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a href="/terms&condition" className="link">
+                      Privacy Policy
+                    </a>
                   </label>
                 </div>
-                {errors.termsAccepted && <div className="error-message show1">{errors.termsAccepted}</div>}
+                {errors.termsAccepted && (
+                  <div className="error-message show1">
+                    {errors.termsAccepted}
+                  </div>
+                )}
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                className={`submit-btn1 ${formData.userType === 'admin' ? 'admin' : ''} ${isLoading ? 'loading' : ''}`}
+                className={`submit-btn1 ${
+                  formData.userType === "admin" ? "admin" : ""
+                } ${isLoading ? "loading" : ""}`}
                 disabled={isLoading}
               >
                 {!isLoading && (
-                  <svg className="btn-icon1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="btn-icon1"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                 )}
-                <span className={`btn-text1 ${isLoading ? 'loading' : ''}`}>
-                  {isLoading ? '' : `Create ${formData.userType === 'admin' ? 'Diving Center' : 'Tourist'} Account`}
+                <span className={`btn-text1 ${isLoading ? "loading" : ""}`}>
+                  {isLoading
+                    ? ""
+                    : `Create ${
+                        formData.userType === "admin"
+                          ? "Diving Center"
+                          : "Tourist"
+                      } Account`}
                 </span>
                 {isLoading && (
                   <div className="loading-spinner1">
@@ -498,7 +722,12 @@ const Register = () => {
 
               {/* Login Link */}
               <div className="login-link1">
-                <p>Already have an account? <a href="/" onClick={handleLoginClick}>Sign in here</a></p>
+                <p>
+                  Already have an account?{" "}
+                  <a href="/" onClick={handleLoginClick}>
+                    Sign in here
+                  </a>
+                </p>
               </div>
             </form>
           </div>
@@ -1224,7 +1453,7 @@ html {
 }
 `;
 
-const styleElement = document.createElement('style');
+const styleElement = document.createElement("style");
 styleElement.innerHTML = styles;
 document.head.appendChild(styleElement);
 
