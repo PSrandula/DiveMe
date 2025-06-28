@@ -1,151 +1,153 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 const IntegratedBookingPage = () => {
+  const token = localStorage.getItem("diveme_token");
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState({
     packageId: 0,
-    packageName: '',
+    packageName: "",
     packagePrice: 0,
-    centerName: '',
-    selectedDate: '',
+    centerName: "",
+    selectedDate: "",
     participants: 1,
     personalDetails: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      medicalConditions: '',
-      experience: ''
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      medicalConditions: "",
+      experience: "",
     },
-    specialRequests: '',
-    totalAmount: 0
+    specialRequests: "",
+    totalAmount: 0,
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
-  const [bookingReference, setBookingReference] = useState('');
+  const [bookingReference, setBookingReference] = useState("");
 
   // Load package data when component mounts
   useEffect(() => {
-    const savedBooking = JSON.parse(localStorage.getItem('diveBooking')) || {};
-    setBookingData(prev => ({
+    const savedBooking = JSON.parse(localStorage.getItem("diveBooking")) || {};
+    setBookingData((prev) => ({
       ...prev,
       packageId: savedBooking.packageId || 0,
-      packageName: savedBooking.packageName || 'Turtle Reef Safari',
+      packageName: savedBooking.packageName || "Turtle Reef Safari",
       packagePrice: savedBooking.packagePrice || 220,
-      centerName: savedBooking.centerName || 'Mirissa Dive Center',
-      totalAmount: (savedBooking.packagePrice || 220) * prev.participants
+      centerName: savedBooking.centerName || "Mirissa Dive Center",
+      totalAmount: (savedBooking.packagePrice || 220) * prev.participants,
     }));
   }, []);
 
   const handleInputChange = (field, value) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      setBookingData(prev => ({
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      setBookingData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
+          [child]: value,
         },
-        totalAmount: parent === 'participants' ? 
-          bookingData.packagePrice * value : 
-          prev.totalAmount
+        totalAmount:
+          parent === "participants"
+            ? bookingData.packagePrice * value
+            : prev.totalAmount,
       }));
     } else {
-      setBookingData(prev => ({
+      setBookingData((prev) => ({
         ...prev,
         [field]: value,
-        totalAmount: field === 'participants' ? 
-          bookingData.packagePrice * value : 
-          prev.totalAmount
+        totalAmount:
+          field === "participants"
+            ? bookingData.packagePrice * value
+            : prev.totalAmount,
       }));
     }
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
 
   const validateStep = (step) => {
     const newErrors = {};
-    
+
     if (step === 1) {
-      if (!bookingData.selectedDate) newErrors.selectedDate = 'Please select a date';
-      if (bookingData.participants < 1) newErrors.participants = 'At least 1 participant required';
+      if (!bookingData.selectedDate)
+        newErrors.selectedDate = "Please select a date";
+      if (bookingData.participants < 1)
+        newErrors.participants = "At least 1 participant required";
     }
-    
+
     if (step === 2) {
-      if (!bookingData.personalDetails.firstName) newErrors['personalDetails.firstName'] = 'First name is required';
-      if (!bookingData.personalDetails.lastName) newErrors['personalDetails.lastName'] = 'Last name is required';
-      if (!bookingData.personalDetails.email) newErrors['personalDetails.email'] = 'Email is required';
-      if (!bookingData.personalDetails.phone) newErrors['personalDetails.phone'] = 'Phone number is required';
+      if (!bookingData.personalDetails.firstName)
+        newErrors["personalDetails.firstName"] = "First name is required";
+      if (!bookingData.personalDetails.lastName)
+        newErrors["personalDetails.lastName"] = "Last name is required";
+      if (!bookingData.personalDetails.email)
+        newErrors["personalDetails.email"] = "Email is required";
+      if (!bookingData.personalDetails.phone)
+        newErrors["personalDetails.phone"] = "Phone number is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handlePrevious = () => {
-    setCurrentStep(prev => prev - 1);
+    setCurrentStep((prev) => prev - 1);
   };
 
   const handleSubmit = async () => {
     if (!validateStep(2)) return;
-    
+
     setIsSubmitting(true);
-    
-    // Generate booking reference
-    const reference = `DB${Date.now().toString().slice(-6)}`;
-    setBookingReference(reference);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Create booking object with ID
-      const completedBooking = {
-        ...bookingData,
-        id: Date.now(),
-        reference: reference,
-        submittedAt: new Date().toISOString()
-      };
-      
-      // Store the booking for the dashboard to pick up
-      const existingBookings = JSON.parse(localStorage.getItem('completedBookings') || '[]');
-      existingBookings.push(completedBooking);
-      localStorage.setItem('completedBookings', JSON.stringify(existingBookings));
-      
-      // Also dispatch custom event for real-time updates
-      const event = new CustomEvent('newBooking', {
-        detail: completedBooking
+
+    try {
+      const token = localStorage.getItem("diveme_token");
+
+      const response = await fetch("http://localhost:5000/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(bookingData),
       });
-      window.dispatchEvent(event);
-      
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBookingReference(data.reference);
+        setBookingComplete(true);
+        localStorage.removeItem("diveBooking");
+      } else {
+        console.error("Booking failed:", data.error);
+        alert("Booking failed: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      alert("Error submitting booking. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      setBookingComplete(true);
-      
-      // Clear the stored booking data after successful submission
-      localStorage.removeItem('diveBooking');
-      
-      // Show success message
-      console.log('Booking completed:', completedBooking);
-      
-    }, 2000);
+    }
   };
 
   const getMinDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    return tomorrow.toISOString().split("T")[0];
   };
 
   if (bookingComplete) {
@@ -163,7 +165,8 @@ const IntegratedBookingPage = () => {
               <strong>Dive Center:</strong> {bookingData.centerName}
             </div>
             <div style={styles.bookingDetail}>
-              <strong>Date:</strong> {new Date(bookingData.selectedDate).toLocaleDateString()}
+              <strong>Date:</strong>{" "}
+              {new Date(bookingData.selectedDate).toLocaleDateString()}
             </div>
             <div style={styles.bookingDetail}>
               <strong>Participants:</strong> {bookingData.participants}
@@ -176,22 +179,25 @@ const IntegratedBookingPage = () => {
             </div>
           </div>
           <div style={styles.successAlert}>
-            <strong>Great news!</strong> Your booking has been automatically added to the provider dashboard and they will be notified immediately.
+            <strong>Great news!</strong> Your booking has been automatically
+            added to the provider dashboard and they will be notified
+            immediately.
           </div>
           <p style={styles.successMessage}>
-            A confirmation email has been sent to {bookingData.personalDetails.email}. 
-            Our team will contact you within 24 hours to confirm the details.
+            A confirmation email has been sent to{" "}
+            {bookingData.personalDetails.email}. Our team will contact you
+            within 24 hours to confirm the details.
           </p>
           <div style={styles.buttonGroup}>
-            <button 
+            <button
               style={styles.homeButton}
-              onClick={() => window.location.href = '/home'}
+              onClick={() => (window.location.href = "/home")}
             >
               Back to Home
             </button>
-            <button 
+            <button
               style={styles.dashboardButton}
-              onClick={() => window.location.href = '/activebooking'}
+              onClick={() => (window.location.href = "/activebooking")}
             >
               View in Dashboard
             </button>
@@ -201,7 +207,7 @@ const IntegratedBookingPage = () => {
     );
   }
 
-    return (
+  return (
     <div style={styles.container}>
       <div style={styles.bookingCard}>
         {/* Header */}
@@ -209,26 +215,44 @@ const IntegratedBookingPage = () => {
           <h1 style={styles.title}>Complete Your Booking</h1>
           <div style={styles.progressBar}>
             <div style={styles.progressStep}>
-              <div style={{
-                ...styles.stepNumber,
-                ...(currentStep >= 1 ? styles.stepActive : styles.stepInactive)
-              }}>1</div>
+              <div
+                style={{
+                  ...styles.stepNumber,
+                  ...(currentStep >= 1
+                    ? styles.stepActive
+                    : styles.stepInactive),
+                }}
+              >
+                1
+              </div>
               <span style={styles.stepLabel}>Select Date</span>
             </div>
             <div style={styles.progressLine}></div>
             <div style={styles.progressStep}>
-              <div style={{
-                ...styles.stepNumber,
-                ...(currentStep >= 2 ? styles.stepActive : styles.stepInactive)
-              }}>2</div>
+              <div
+                style={{
+                  ...styles.stepNumber,
+                  ...(currentStep >= 2
+                    ? styles.stepActive
+                    : styles.stepInactive),
+                }}
+              >
+                2
+              </div>
               <span style={styles.stepLabel}>Personal Details</span>
             </div>
             <div style={styles.progressLine}></div>
             <div style={styles.progressStep}>
-              <div style={{
-                ...styles.stepNumber,
-                ...(currentStep >= 3 ? styles.stepActive : styles.stepInactive)
-              }}>3</div>
+              <div
+                style={{
+                  ...styles.stepNumber,
+                  ...(currentStep >= 3
+                    ? styles.stepActive
+                    : styles.stepInactive),
+                }}
+              >
+                3
+              </div>
               <span style={styles.stepLabel}>Confirmation</span>
             </div>
           </div>
@@ -253,42 +277,55 @@ const IntegratedBookingPage = () => {
           {currentStep === 1 && (
             <div>
               <h3>Select Your Dive Date & Participants</h3>
-              
+
               <div style={styles.formGroup}>
                 <label style={styles.label}>Preferred Date *</label>
                 <input
                   type="date"
                   min={getMinDate()}
                   value={bookingData.selectedDate}
-                  onChange={(e) => handleInputChange('selectedDate', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("selectedDate", e.target.value)
+                  }
                   style={{
                     ...styles.input,
-                    ...(errors.selectedDate ? styles.inputError : {})
+                    ...(errors.selectedDate ? styles.inputError : {}),
                   }}
                 />
-                {errors.selectedDate && <span style={styles.errorText}>{errors.selectedDate}</span>}
+                {errors.selectedDate && (
+                  <span style={styles.errorText}>{errors.selectedDate}</span>
+                )}
               </div>
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Number of Participants *</label>
                 <select
                   value={bookingData.participants}
-                  onChange={(e) => handleInputChange('participants', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleInputChange("participants", parseInt(e.target.value))
+                  }
                   style={{
                     ...styles.input,
-                    ...(errors.participants ? styles.inputError : {})
+                    ...(errors.participants ? styles.inputError : {}),
                   }}
                 >
-                  {[1,2,3,4,5,6,7,8].map(num => (
-                    <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                    <option key={num} value={num}>
+                      {num} {num === 1 ? "Person" : "People"}
+                    </option>
                   ))}
                 </select>
-                {errors.participants && <span style={styles.errorText}>{errors.participants}</span>}
+                {errors.participants && (
+                  <span style={styles.errorText}>{errors.participants}</span>
+                )}
               </div>
 
               <div style={styles.priceBreakdown}>
                 <div style={styles.breakdownRow}>
-                  <span>{bookingData.packageName} ({bookingData.participants} × ${bookingData.packagePrice}):</span>
+                  <span>
+                    {bookingData.packageName} ({bookingData.participants} × $
+                    {bookingData.packagePrice}):
+                  </span>
                   <span>${bookingData.totalAmount}</span>
                 </div>
                 <div style={styles.totalRow}>
@@ -302,34 +339,56 @@ const IntegratedBookingPage = () => {
           {currentStep === 2 && (
             <div>
               <h3>Personal & Emergency Details</h3>
-              
+
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>First Name *</label>
                   <input
                     type="text"
                     value={bookingData.personalDetails.firstName}
-                    onChange={(e) => handleInputChange('personalDetails.firstName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalDetails.firstName",
+                        e.target.value
+                      )
+                    }
                     style={{
                       ...styles.input,
-                      ...(errors['personalDetails.firstName'] ? styles.inputError : {})
+                      ...(errors["personalDetails.firstName"]
+                        ? styles.inputError
+                        : {}),
                     }}
                   />
-                  {errors['personalDetails.firstName'] && <span style={styles.errorText}>{errors['personalDetails.firstName']}</span>}
+                  {errors["personalDetails.firstName"] && (
+                    <span style={styles.errorText}>
+                      {errors["personalDetails.firstName"]}
+                    </span>
+                  )}
                 </div>
-                
+
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Last Name *</label>
                   <input
                     type="text"
                     value={bookingData.personalDetails.lastName}
-                    onChange={(e) => handleInputChange('personalDetails.lastName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalDetails.lastName",
+                        e.target.value
+                      )
+                    }
                     style={{
                       ...styles.input,
-                      ...(errors['personalDetails.lastName'] ? styles.inputError : {})
+                      ...(errors["personalDetails.lastName"]
+                        ? styles.inputError
+                        : {}),
                     }}
                   />
-                  {errors['personalDetails.lastName'] && <span style={styles.errorText}>{errors['personalDetails.lastName']}</span>}
+                  {errors["personalDetails.lastName"] && (
+                    <span style={styles.errorText}>
+                      {errors["personalDetails.lastName"]}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -339,37 +398,58 @@ const IntegratedBookingPage = () => {
                   <input
                     type="email"
                     value={bookingData.personalDetails.email}
-                    onChange={(e) => handleInputChange('personalDetails.email', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("personalDetails.email", e.target.value)
+                    }
                     style={{
                       ...styles.input,
-                      ...(errors['personalDetails.email'] ? styles.inputError : {})
+                      ...(errors["personalDetails.email"]
+                        ? styles.inputError
+                        : {}),
                     }}
                   />
-                  {errors['personalDetails.email'] && <span style={styles.errorText}>{errors['personalDetails.email']}</span>}
+                  {errors["personalDetails.email"] && (
+                    <span style={styles.errorText}>
+                      {errors["personalDetails.email"]}
+                    </span>
+                  )}
                 </div>
-                
+
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Phone Number *</label>
                   <input
                     type="tel"
                     value={bookingData.personalDetails.phone}
-                    onChange={(e) => handleInputChange('personalDetails.phone', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("personalDetails.phone", e.target.value)
+                    }
                     style={{
                       ...styles.input,
-                      ...(errors['personalDetails.phone'] ? styles.inputError : {})
+                      ...(errors["personalDetails.phone"]
+                        ? styles.inputError
+                        : {}),
                     }}
                   />
-                  {errors['personalDetails.phone'] && <span style={styles.errorText}>{errors['personalDetails.phone']}</span>}
+                  {errors["personalDetails.phone"] && (
+                    <span style={styles.errorText}>
+                      {errors["personalDetails.phone"]}
+                    </span>
+                  )}
                 </div>
               </div>
 
               <h4 style={styles.sectionTitle}>Diving Experience</h4>
-              <div style={styles.formRow}>                  
+              <div style={styles.formRow}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Diving Experience</label>
                   <select
                     value={bookingData.personalDetails.experience}
-                    onChange={(e) => handleInputChange('personalDetails.experience', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalDetails.experience",
+                        e.target.value
+                      )
+                    }
                     style={styles.input}
                   >
                     <option value="">Select Experience</option>
@@ -385,7 +465,12 @@ const IntegratedBookingPage = () => {
                 <label style={styles.label}>Medical Conditions</label>
                 <textarea
                   value={bookingData.personalDetails.medicalConditions}
-                  onChange={(e) => handleInputChange('personalDetails.medicalConditions', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "personalDetails.medicalConditions",
+                      e.target.value
+                    )
+                  }
                   style={styles.textarea}
                   placeholder="Any medical conditions we should be aware of..."
                 />
@@ -395,7 +480,9 @@ const IntegratedBookingPage = () => {
                 <label style={styles.label}>Special Requests</label>
                 <textarea
                   value={bookingData.specialRequests}
-                  onChange={(e) => handleInputChange('specialRequests', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("specialRequests", e.target.value)
+                  }
                   style={styles.textarea}
                   placeholder="Any special requests or additional information..."
                 />
@@ -407,31 +494,25 @@ const IntegratedBookingPage = () => {
         {/* Navigation Buttons */}
         <div style={styles.buttonGroup}>
           {currentStep > 1 && (
-            <button
-              style={styles.backButton}
-              onClick={handlePrevious}
-            >
+            <button style={styles.backButton} onClick={handlePrevious}>
               Previous
             </button>
           )}
-          
+
           {currentStep < 2 ? (
-            <button
-              style={styles.nextButton}
-              onClick={handleNext}
-            >
+            <button style={styles.nextButton} onClick={handleNext}>
               Next Step
             </button>
           ) : (
             <button
               style={{
                 ...styles.nextButton,
-                ...(isSubmitting ? styles.buttonDisabled : {})
+                ...(isSubmitting ? styles.buttonDisabled : {}),
               }}
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Processing...' : 'Complete Booking'}
+              {isSubmitting ? "Processing..." : "Complete Booking"}
             </button>
           )}
         </div>
@@ -443,274 +524,273 @@ const IntegratedBookingPage = () => {
 const styles = {
   container: {
     fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif",
-    backgroundColor: '#f8fafc',
-    minHeight: '100vh',
-    padding: '6rem 2rem 1rem'
+    backgroundColor: "#f8fafc",
+    minHeight: "100vh",
+    padding: "6rem 2rem 1rem",
   },
   bookingCard: {
-    maxWidth: '800px',
-    margin: '0 auto',
-    backgroundColor: 'white',
-    borderRadius: '20px',
-    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-    overflow: 'hidden'
+    maxWidth: "800px",
+    margin: "0 auto",
+    backgroundColor: "white",
+    borderRadius: "20px",
+    boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
+    overflow: "hidden",
   },
   header: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    padding: '2rem',
-    textAlign: 'center'
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    color: "white",
+    padding: "2rem",
+    textAlign: "center",
   },
   title: {
-    fontSize: '2rem',
-    fontWeight: '700',
-    marginBottom: '2rem'
+    fontSize: "2rem",
+    fontWeight: "700",
+    marginBottom: "2rem",
   },
   progressBar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '1rem'
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "1rem",
   },
   progressStep: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.5rem'
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "0.5rem",
   },
   stepNumber: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: '600',
-    fontSize: '1.1rem'
+    width: "40px",
+    height: "40px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "600",
+    fontSize: "1.1rem",
   },
   stepActive: {
-    backgroundColor: 'white',
-    color: '#667eea'
+    backgroundColor: "white",
+    color: "#667eea",
   },
   stepInactive: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    color: 'white'
+    backgroundColor: "rgba(255,255,255,0.3)",
+    color: "white",
   },
   stepLabel: {
-    fontSize: '0.9rem',
-    textAlign: 'center'
+    fontSize: "0.9rem",
+    textAlign: "center",
   },
   progressLine: {
-    width: '60px',
-    height: '2px',
-    backgroundColor: 'rgba(255,255,255,0.3)'
+    width: "60px",
+    height: "2px",
+    backgroundColor: "rgba(255,255,255,0.3)",
   },
   packageSummary: {
-    padding: '1.5rem 2rem',
-    backgroundColor: '#f8fafc',
-    borderBottom: '1px solid #e2e8f0'
+    padding: "1.5rem 2rem",
+    backgroundColor: "#f8fafc",
+    borderBottom: "1px solid #e2e8f0",
   },
   summaryGrid: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   packagePrice: {
-    textAlign: 'right'
+    textAlign: "right",
   },
   price: {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    color: '#667eea',
-    display: 'block'
+    fontSize: "1.5rem",
+    fontWeight: "700",
+    color: "#667eea",
+    display: "block",
   },
   priceDetail: {
-    fontSize: '0.9rem',
-    color: '#64748b'
+    fontSize: "0.9rem",
+    color: "#64748b",
   },
   stepContent: {
-    padding: '2rem'
+    padding: "2rem",
   },
   formGroup: {
-    marginBottom: '1.5rem'
+    marginBottom: "1.5rem",
   },
   formRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1rem',
-    '@media (max-width: 768px)': {
-      gridTemplateColumns: '1fr'
-    }
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "1rem",
+    "@media (max-width: 768px)": {
+      gridTemplateColumns: "1fr",
+    },
   },
   label: {
-    display: 'block',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    color: '#2d3748',
-    marginBottom: '0.5rem'
+    display: "block",
+    fontSize: "0.9rem",
+    fontWeight: "600",
+    color: "#2d3748",
+    marginBottom: "0.5rem",
   },
   input: {
-    width: '100%',
-    padding: '0.75rem',
-    border: '2px solid #e2e8f0',
-    borderRadius: '10px',
-    fontSize: '1rem',
-    transition: 'border-color 0.3s ease',
-    boxSizing: 'border-box'
+    width: "100%",
+    padding: "0.75rem",
+    border: "2px solid #e2e8f0",
+    borderRadius: "10px",
+    fontSize: "1rem",
+    transition: "border-color 0.3s ease",
+    boxSizing: "border-box",
   },
   inputError: {
-    borderColor: '#f56565'
+    borderColor: "#f56565",
   },
   textarea: {
-    width: '100%',
-    padding: '0.75rem',
-    border: '2px solid #e2e8f0',
-    borderRadius: '10px',
-    fontSize: '1rem',
-    minHeight: '80px',
-    resize: 'vertical',
-    fontFamily: 'inherit',
-    transition: 'border-color 0.3s ease',
-    boxSizing: 'border-box'
+    width: "100%",
+    padding: "0.75rem",
+    border: "2px solid #e2e8f0",
+    borderRadius: "10px",
+    fontSize: "1rem",
+    minHeight: "80px",
+    resize: "vertical",
+    fontFamily: "inherit",
+    transition: "border-color 0.3s ease",
+    boxSizing: "border-box",
   },
   errorText: {
-    color: '#f56565',
-    fontSize: '0.8rem',
-    marginTop: '0.25rem',
-    display: 'block'
+    color: "#f56565",
+    fontSize: "0.8rem",
+    marginTop: "0.25rem",
+    display: "block",
   },
   sectionTitle: {
-    fontSize: '1.2rem',
-    fontWeight: '600',
-    color: '#2d3748',
-    marginTop: '2rem',
-    marginBottom: '1rem',
-    borderBottom: '2px solid #e2e8f0',
-    paddingBottom: '0.5rem'
+    fontSize: "1.2rem",
+    fontWeight: "600",
+    color: "#2d3748",
+    marginTop: "2rem",
+    marginBottom: "1rem",
+    borderBottom: "2px solid #e2e8f0",
+    paddingBottom: "0.5rem",
   },
   priceBreakdown: {
-    backgroundColor: '#f8fafc',
-    padding: '1rem',
-    borderRadius: '10px',
-    marginTop: '1rem'
+    backgroundColor: "#f8fafc",
+    padding: "1rem",
+    borderRadius: "10px",
+    marginTop: "1rem",
   },
   breakdownRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '0.5rem',
-    color: '#64748b'
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "0.5rem",
+    color: "#64748b",
   },
   totalRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '1.1rem',
-    fontWeight: '700',
-    color: '#2d3748',
-    borderTop: '1px solid #e2e8f0',
-    paddingTop: '0.5rem'
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: "1.1rem",
+    fontWeight: "700",
+    color: "#2d3748",
+    borderTop: "1px solid #e2e8f0",
+    paddingTop: "0.5rem",
   },
   buttonGroup: {
-    display: 'flex',
-    gap: '1rem',
-    padding: '2rem',
-    borderTop: '1px solid #e2e8f0',
-    justifyContent: 'space-between'
+    display: "flex",
+    gap: "1rem",
+    padding: "2rem",
+    borderTop: "1px solid #e2e8f0",
+    justifyContent: "space-between",
   },
   backButton: {
-    padding: '0.75rem 2rem',
-    backgroundColor: '#f8fafc',
-    color: '#64748b',
-    border: '2px solid #e2e8f0',
-    borderRadius: '10px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease'
+    padding: "0.75rem 2rem",
+    backgroundColor: "#f8fafc",
+    color: "#64748b",
+    border: "2px solid #e2e8f0",
+    borderRadius: "10px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
   },
   nextButton: {
-    padding: '0.75rem 2rem',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    marginLeft: 'auto'
+    padding: "0.75rem 2rem",
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    marginLeft: "auto",
   },
   buttonDisabled: {
     opacity: 0.6,
-    cursor: 'not-allowed'
+    cursor: "not-allowed",
   },
   successContainer: {
-    maxWidth: '600px',
-    margin: '0 auto',
-    textAlign: 'center',
-    backgroundColor: 'white',
-    borderRadius: '20px',
-    padding: '3rem',
-    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+    maxWidth: "600px",
+    margin: "0 auto",
+    textAlign: "center",
+    backgroundColor: "white",
+    borderRadius: "20px",
+    padding: "3rem",
+    boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
   },
   successIcon: {
-    fontSize: '4rem',
-    marginBottom: '1rem'
+    fontSize: "4rem",
+    marginBottom: "1rem",
   },
   successTitle: {
-    fontSize: '2.5rem',
-    fontWeight: '700',
-    color: '#48bb78',
-    marginBottom: '2rem'
+    fontSize: "2.5rem",
+    fontWeight: "700",
+    color: "#48bb78",
+    marginBottom: "2rem",
   },
   successCard: {
-    backgroundColor: '#f8fafc',
-    padding: '2rem',
-    borderRadius: '15px',
-    marginBottom: '2rem',
-    textAlign: 'left'
+    backgroundColor: "#f8fafc",
+    padding: "2rem",
+    borderRadius: "15px",
+    marginBottom: "2rem",
+    textAlign: "left",
   },
   bookingDetail: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '0.5rem 0',
-    borderBottom: '1px solid #e2e8f0'
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "0.5rem 0",
+    borderBottom: "1px solid #e2e8f0",
   },
   successAlert: {
-    backgroundColor: '#d1fae5',
-    color: '#065f46',
-    padding: '1rem',
-    borderRadius: '10px',
-    marginBottom: '2rem',
-    fontSize: '0.95rem',
-    border: '1px solid #a7f3d0'
+    backgroundColor: "#d1fae5",
+    color: "#065f46",
+    padding: "1rem",
+    borderRadius: "10px",
+    marginBottom: "2rem",
+    fontSize: "0.95rem",
+    border: "1px solid #a7f3d0",
   },
   successMessage: {
-    fontSize: '1.1rem',
-    color: '#4a5568',
-    lineHeight: '1.6',
-    marginBottom: '2rem'
+    fontSize: "1.1rem",
+    color: "#4a5568",
+    lineHeight: "1.6",
+    marginBottom: "2rem",
   },
   homeButton: {
-    padding: '1rem 2rem',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    fontWeight: '600',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease'
+    padding: "1rem 2rem",
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "600",
+    fontSize: "1rem",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
   },
   dashboardButton: {
-    padding: '1rem 2rem',
-    backgroundColor: '#10b981',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    fontWeight: '600',
-    fontSize: '1rem',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease'
-  }
+    padding: "1rem 2rem",
+    backgroundColor: "#10b981",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "600",
+    fontSize: "1rem",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  },
 };
-  
 
 export default IntegratedBookingPage;
