@@ -1,4 +1,5 @@
 const DiveCenter = require("../model/DiveCenter");
+const cloudinary = require("cloudinary").v2;
 
 const parseArrayField = (field) => {
   if (!field) return [];
