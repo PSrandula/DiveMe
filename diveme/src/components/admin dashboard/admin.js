@@ -1,859 +1,1055 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 
 const DiveCenterAdmin = () => {
   const [diveCenters, setDiveCenters] = useState([]);
   const [selectedCenter, setSelectedCenter] = useState(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const [isFormEmpty, setIsFormEmpty] = useState(true);
   const [canSubmit, setCanSubmit] = useState(false);
 
-  // Form data with all fields
   const [formData, setFormData] = useState({
-    name: '',
-    location: '',
-    rating: '',
-    totalReviews: '',
-    description: '',
+    name: "",
+    location: "",
+    rating: "",
+    totalReviews: "",
+    description: "",
     features: [],
     specialties: [],
     packages: [],
-    mainImage: '',
-    gallery: []
   });
 
-  // Temporary input states
-  const [tempFeature, setTempFeature] = useState('');
-  const [tempSpecialty, setTempSpecialty] = useState('');
+  const [mainImageFile, setMainImageFile] = useState(null);
+  const [mainImageUrl, setMainImageUrl] = useState("");
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryImageUrls, setGalleryImageUrls] = useState([]);
+
+  const [tempFeature, setTempFeature] = useState("");
+  const [tempSpecialty, setTempSpecialty] = useState("");
   const [newPackage, setNewPackage] = useState({
-    name: '',
-    price: '',
-    duration: '',
-    description: ''
+    name: "",
+    price: "",
+    duration: "",
+    description: "",
   });
 
-  // Check if form is empty and can be submitted
-  useEffect(() => {
-    const isEmpty = 
-      formData.name === '' &&
-      formData.location === '' &&
-      formData.description === '' &&
-      formData.features.length === 0 &&
-      formData.specialties.length === 0 &&
-      formData.packages.length === 0 &&
-      formData.mainImage === '' &&
-      formData.gallery.length === 0;
-    
-    const canSubmitForm = formData.name.trim() !== '' && 
-                         formData.location.trim() !== '' && 
-                         formData.description.trim() !== '';
-    
-    setIsFormEmpty(isEmpty);
-    setCanSubmit(canSubmitForm);
-  }, [formData]);
+  const resetForm = useCallback(() => {
+    setSelectedCenter(null);
+    setFormData({
+      name: "",
+      location: "",
+      rating: "",
+      totalReviews: "",
+      description: "",
+      features: [],
+      specialties: [],
+      packages: [],
+    });
+    setMainImageFile(null);
+    setMainImageUrl("");
+    setGalleryFiles([]);
+    setGalleryImageUrls([]);
+    setTempFeature("");
+    setTempSpecialty("");
+    setNewPackage({
+      name: "",
+      price: "",
+      duration: "",
+      description: "",
+    });
+    setMessage("");
+  }, []);
 
-  // Handle form input changes
+  const fetchDiveCenters = useCallback(async () => {
+    const token = localStorage.getItem("diveme_token"); // get token fresh here
+
+    try {
+      setLoading(true);
+
+      const res = await axios.get("http://localhost:5000/api/dive-centers", {
+        headers: {
+          Authorization: `Bearer ${token}`, // send full token
+        },
+      });
+
+      setDiveCenters(res.data);
+    } catch (err) {
+      console.error(
+        "Error fetching dive centers:",
+        err.response || err.message || err
+      );
+      setMessage("Failed to load dive centers.");
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(""), 3000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDiveCenters();
+  }, [fetchDiveCenters]);
+
+  useEffect(() => {
+    const requiredFieldsFilled =
+      formData.name.trim() !== "" &&
+      formData.location.trim() !== "" &&
+      formData.description.trim() !== "";
+
+    const formHasContent =
+      formData.name !== "" ||
+      formData.location !== "" ||
+      formData.description !== "" ||
+      formData.features.length > 0 ||
+      formData.specialties.length > 0 ||
+      formData.packages.length > 0 ||
+      mainImageFile !== null ||
+      mainImageUrl !== "" ||
+      galleryFiles.length > 0 ||
+      galleryImageUrls.length > 0;
+
+    setIsFormEmpty(!formHasContent);
+    setCanSubmit(requiredFieldsFilled);
+  }, [formData, mainImageFile, mainImageUrl, galleryFiles, galleryImageUrls]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle image upload
-  const handleImageUpload = (e) => {
+  const handleMainImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, mainImage: reader.result });
-      };
-      reader.readAsDataURL(file);
+      setMainImageFile(file);
+      setMainImageUrl(URL.createObjectURL(file));
+    } else {
+      setMainImageFile(null);
+      setMainImageUrl("");
     }
   };
 
-  // Handle gallery images upload
   const handleGalleryUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newGallery = [...formData.gallery];
-    
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newGallery.push(reader.result);
-        setFormData(prev => ({ ...prev, gallery: newGallery }));
-      };
-      reader.readAsDataURL(file);
-    });
+    setGalleryFiles((prev) => [...prev, ...files]);
   };
 
-  // Add feature
+  const removeGalleryImage = (indexToRemove, isNewFile = false) => {
+    if (isNewFile) {
+      setGalleryFiles((prev) => prev.filter((_, i) => i !== indexToRemove));
+    } else {
+      setGalleryImageUrls((prev) => prev.filter((_, i) => i !== indexToRemove));
+    }
+  };
+
   const addFeature = () => {
     if (tempFeature.trim()) {
-      setFormData(prev => ({ 
-        ...prev, 
-        features: [...prev.features, tempFeature.trim()] 
+      setFormData((prev) => ({
+        ...prev,
+        features: [...prev.features, tempFeature.trim()],
       }));
-      setTempFeature('');
+      setTempFeature("");
     }
   };
 
-  // Remove feature
   const removeFeature = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      features: prev.features.filter((_, i) => i !== index)
+      features: prev.features.filter((_, i) => i !== index),
     }));
   };
 
-  // Add specialty
   const addSpecialty = () => {
     if (tempSpecialty.trim()) {
-      setFormData(prev => ({ 
-        ...prev, 
-        specialties: [...prev.specialties, tempSpecialty.trim()] 
+      setFormData((prev) => ({
+        ...prev,
+        specialties: [...prev.specialties, tempSpecialty.trim()],
       }));
-      setTempSpecialty('');
+      setTempSpecialty("");
     }
   };
 
-  // Remove specialty
   const removeSpecialty = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      specialties: prev.specialties.filter((_, i) => i !== index)
+      specialties: prev.specialties.filter((_, i) => i !== index),
     }));
   };
 
-  // Add package
   const addPackage = () => {
-    if (newPackage.name && newPackage.price) {
-      setFormData(prev => ({
+    if (newPackage.name.trim() && newPackage.price.trim()) {
+      setFormData((prev) => ({
         ...prev,
-        packages: [...prev.packages, { ...newPackage, id: Date.now() }]
+        packages: [...prev.packages, { ...newPackage, id: Date.now() }],
       }));
       setNewPackage({
-        name: '',
-        price: '',
-        duration: '',
-        description: ''
+        name: "",
+        price: "",
+        duration: "",
+        description: "",
       });
     }
   };
 
-  // Remove package
   const removePackage = (id) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      packages: prev.packages.filter(pkg => pkg.id !== id)
+      packages: prev.packages.filter((pkg) => pkg.id !== id && pkg._id !== id),
     }));
   };
 
-  // Edit existing center
   const handleEdit = (center) => {
     setSelectedCenter(center);
     setFormData({
-      name: center.name,
-      location: center.location,
-      rating: center.rating,
-      totalReviews: center.totalReviews,
-      description: center.description,
-      features: [...center.features],
-      specialties: [...center.specialties],
-      packages: [...center.packages],
-      mainImage: center.mainImage,
-      gallery: [...center.gallery]
+      name: center.name || "",
+      location: center.location || "",
+      rating: center.rating || "",
+      totalReviews: center.totalReviews || "",
+      description: center.description || "",
+      features: [...(center.features || [])],
+      specialties: [...(center.specialties || [])],
+      packages: [...(center.packages || [])],
     });
+    setMainImageUrl(center.mainImage || "");
+    setMainImageFile(null);
+    setGalleryImageUrls([...(center.gallery || [])]);
+    setGalleryFiles([]);
+    setTempFeature("");
+    setTempSpecialty("");
+    setNewPackage({
+      name: "",
+      price: "",
+      duration: "",
+      description: "",
+    });
+    setMessage("");
   };
 
-  // Reset form
-  const resetForm = () => {
-    setSelectedCenter(null);
-    setFormData({
-      name: '',
-      location: '',
-      rating: '',
-      totalReviews: '',
-      description: '',
-      features: [],
-      specialties: [],
-      packages: [],
-      mainImage: '',
-      gallery: []
-    });
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // Submit form
-  const handleSubmit = () => {
-    // Validate required fields
-    if (!formData.name || !formData.location || !formData.description) {
-      setMessage('Please fill in all required fields');
-      setTimeout(() => setMessage(''), 3000);
+    const token = localStorage.getItem("diveme_token");
+    console.log("Sending token:", token); // DEBUG: check token here
+
+    if (!token) {
+      setMessage("You are not logged in. Please login first.");
       return;
     }
-    
-    if (selectedCenter) {
-      // Update existing center
-      setDiveCenters(prev =>
-        prev.map(center =>
-          center.id === selectedCenter.id ? { ...formData, id: selectedCenter.id } : center
-        )
+
+    if (!canSubmit) {
+      setMessage(
+        "Please fill in all required fields (Name, Location, and Description) before submitting."
       );
-      setMessage('Dive center updated successfully');
-    } else {
-      // Add new center
-      const newCenter = {
-        ...formData,
-        id: Date.now(),
-        reviews: []
-      };
-      setDiveCenters(prev => [...prev, newCenter]);
-      setMessage('Dive center added successfully');
+      return;
     }
-    
-    setTimeout(() => setMessage(''), 3000);
-    resetForm();
+
+    setLoading(true);
+
+    const form = new FormData();
+    form.append("name", formData.name);
+    form.append("location", formData.location);
+    form.append("rating", formData.rating);
+    form.append("totalReviews", formData.totalReviews);
+    form.append("description", formData.description);
+
+    formData.features.forEach((feature) => {
+      form.append("features", feature);
+    });
+    formData.specialties.forEach((specialty) => {
+      form.append("specialties", specialty);
+    });
+    formData.packages.forEach((pkg) => {
+      form.append("packages", JSON.stringify(pkg));
+    });
+
+    if (mainImageFile) {
+      form.append("mainImage", mainImageFile);
+    }
+    galleryFiles.forEach((file) => {
+      form.append("gallery", file);
+    });
+    galleryImageUrls.forEach((url) => {
+      form.append("existingGalleryUrls", url);
+    });
+
+    try {
+      if (selectedCenter) {
+        await axios.put(
+          `http://localhost:5000/api/dive-centers/${selectedCenter._id}`,
+          form,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`, // << token here!
+            },
+          }
+        );
+        setMessage("Dive center updated successfully!");
+      } else {
+        await axios.post("http://localhost:5000/api/dive-centers", form, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // << token here too!
+          },
+        });
+        setMessage("Dive center created successfully!");
+      }
+      resetForm();
+      fetchDiveCenters();
+    } catch (err) {
+      console.error(
+        "Error submitting form:",
+        err.response ? err.response.data : err.message
+      );
+      setMessage(
+        err.response?.data?.message || "Error submitting dive center."
+      );
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(""), 3000);
+    }
   };
 
-  // Styles object
-  const styles = {
-    container: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '2rem',
-      paddingTop: '100px',
-      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
-      backgroundColor: '#f8f9fa',
-      minHeight: '100vh'
-    },
-    title: {
-      color: '#2c3e50',
-      textAlign: 'center',
-      marginBottom: '2rem',
-      fontSize: '2.2rem',
-      fontWeight: 'bold'
-    },
-    alert: {
-      padding: '1rem',
-      borderRadius: '8px',
-      marginBottom: '1.5rem',
-      fontWeight: '500',
-      textAlign: 'center'
-    },
-    alertSuccess: {
-      backgroundColor: '#d4edda',
-      color: '#155724',
-      border: '1px solid #c3e6cb'
-    },
-    alertError: {
-      backgroundColor: '#f8d7da',
-      color: '#721c24',
-      border: '1px solid #f5c6cb'
-    },
-    alertReady: {
-      backgroundColor: '#d1ecf1',
-      color: '#0c5460',
-      border: '1px solid #bee5eb'
-    },
-    alertNotReady: {
-      backgroundColor: '#fff3cd',
-      color: '#856404',
-      border: '1px solid #ffeaa7'
-    },
-    formContainer: {
-      backgroundColor: '#ffffff',
-      padding: '2rem',
-      borderRadius: '12px',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-      marginBottom: '2rem'
-    },
-    formSection: {
-      marginBottom: '1.5rem',
-      padding: '1.5rem',
-      backgroundColor: '#f8f9fa',
-      borderRadius: '8px',
-      border: '1px solid #e9ecef'
-    },
-    formTitle: {
-      color: '#2c3e50',
-      marginTop: '0',
-      marginBottom: '1.5rem',
-      fontSize: '1.5rem',
-      fontWeight: '600'
-    },
-    formSubtitle: {
-      color: '#2c3e50',
-      marginTop: '0',
-      marginBottom: '1rem',
-      fontSize: '1.2rem',
-      fontWeight: '600'
-    },
-    formGroup: {
-      marginBottom: '1.2rem'
-    },
-    label: {
-      display: 'block',
-      marginBottom: '0.5rem',
-      fontWeight: '600',
-      color: '#495057'
-    },
-    input: {
-      width: '100%',
-      padding: '0.75rem',
-      border: '1px solid #ced4da',
-      borderRadius: '6px',
-      fontSize: '1rem',
-      transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
-      boxSizing: 'border-box'
-    },
-    inputFocus: {
-      borderColor: '#80bdff',
-      outline: '0',
-      boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
-    },
-    textarea: {
-      width: '100%',
-      padding: '0.75rem',
-      border: '1px solid #ced4da',
-      borderRadius: '6px',
-      fontSize: '1rem',
-      minHeight: '100px',
-      resize: 'vertical',
-      boxSizing: 'border-box'
-    },
-    formRow: {
-      display: 'flex',
-      gap: '1rem'
-    },
-    formRowItem: {
-      flex: '1'
-    },
-    imagePreview: {
-      maxWidth: '200px',
-      maxHeight: '200px',
-      marginTop: '1rem',
-      border: '1px solid #dee2e6',
-      borderRadius: '6px'
-    },
-    galleryPreview: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '1rem',
-      marginTop: '1rem'
-    },
-    galleryItem: {
-      position: 'relative',
-      width: '100px',
-      height: '100px'
-    },
-    galleryImage: {
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-      border: '1px solid #dee2e6',
-      borderRadius: '6px'
-    },
-    galleryRemoveBtn: {
-      position: 'absolute',
-      top: '0.25rem',
-      right: '0.25rem',
-      width: '1.5rem',
-      height: '1.5rem',
-      background: '#dc3545',
-      color: 'white',
-      border: 'none',
-      borderRadius: '50%',
-      fontSize: '0.8rem',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    tagInputGroup: {
-      display: 'flex',
-      gap: '0.5rem',
-      marginBottom: '0.5rem'
-    },
-    tagInput: {
-      flex: '1',
-      padding: '0.5rem',
-      border: '1px solid #ced4da',
-      borderRadius: '6px'
-    },
-    tagAddBtn: {
-      padding: '0.5rem 1rem',
-      background: '#28a745',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      transition: 'background-color 0.15s'
-    },
-    tagsContainer: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '0.5rem'
-    },
-    tagItem: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.25rem',
-      background: '#e9ecef',
-      padding: '0.4rem 0.75rem',
-      borderRadius: '20px',
-      fontSize: '0.9rem'
-    },
-    tagRemoveBtn: {
-      background: 'none',
-      border: 'none',
-      color: '#6c757d',
-      cursor: 'pointer',
-      fontSize: '1rem',
-      lineHeight: '1'
-    },
-    packageFormGroup: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '0.75rem',
-      marginBottom: '1rem'
-    },
-    packageInput: {
-      width: '100%',
-      padding: '0.5rem',
-      border: '1px solid #ced4da',
-      borderRadius: '6px',
-      boxSizing: 'border-box'
-    },
-    packageTextarea: {
-      gridColumn: 'span 2',
-      width: '100%',
-      padding: '0.5rem',
-      border: '1px solid #ced4da',
-      borderRadius: '6px',
-      minHeight: '80px',
-      boxSizing: 'border-box'
-    },
-    packageAddBtn: {
-      gridColumn: 'span 2',
-      padding: '0.5rem',
-      background: '#17a2b8',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      transition: 'background-color 0.15s'
-    },
-    packagesContainer: {
-      display: 'grid',
-      gap: '1rem'
-    },
-    packageItem: {
-      padding: '1rem',
-      background: '#ffffff',
-      border: '1px solid #dee2e6',
-      borderRadius: '6px'
-    },
-    packageName: {
-      marginTop: '0',
-      marginBottom: '0.5rem',
-      color: '#2c3e50',
-      fontSize: '1.1rem',
-      fontWeight: '600'
-    },
-    packageDetail: {
-      margin: '0.25rem 0',
-      color: '#495057'
-    },
-    packageDescription: {
-      margin: '0.5rem 0',
-      color: '#6c757d',
-      fontSize: '0.9rem'
-    },
-    packageRemoveBtn: {
-      padding: '0.25rem 0.5rem',
-      background: '#dc3545',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      fontSize: '0.8rem',
-      cursor: 'pointer',
-      transition: 'background-color 0.15s'
-    },
-    formActions: {
-      display: 'flex',
-      gap: '1rem',
-      marginTop: '1.5rem'
-    },
-    submitBtn: {
-      padding: '0.75rem 1.5rem',
-      background: canSubmit ? '#007bff' : '#6c757d',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      fontSize: '1rem',
-      fontWeight: '500',
-      cursor: canSubmit ? 'pointer' : 'not-allowed',
-      transition: 'background-color 0.15s',
-      opacity: canSubmit ? 1 : 0.6
-    },
-    cancelBtn: {
-      padding: '0.75rem 1.5rem',
-      background: '#6c757d',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      fontSize: '1rem',
-      fontWeight: '500',
-      cursor: 'pointer',
-      transition: 'background-color 0.15s'
-    },
-    centersListSection: {
-      background: '#ffffff',
-      padding: '2rem',
-      borderRadius: '12px',
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-    },
-    centersListTitle: {
-      color: '#2c3e50',
-      marginTop: '0',
-      marginBottom: '1.5rem',
-      fontSize: '1.5rem',
-      fontWeight: '600'
-    },
-    noCentersMessage: {
-      color: '#6c757d',
-      textAlign: 'center',
-      padding: '2rem'
-    },
-    centersGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-      gap: '1.5rem'
-    },
-    centerCard: {
-      border: '1px solid #dee2e6',
-      borderRadius: '12px',
-      overflow: 'hidden',
-      transition: 'transform 0.2s, box-shadow 0.2s',
-      backgroundColor: '#ffffff'
-    },
-    centerCardHover: {
-      transform: 'translateY(-5px)',
-      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)'
-    },
-    centerImage: {
-      width: '100%',
-      height: '200px',
-      objectFit: 'cover'
-    },
-    centerContent: {
-      padding: '1.25rem'
-    },
-    centerName: {
-      marginTop: '0',
-      marginBottom: '0.5rem',
-      color: '#2c3e50',
-      fontSize: '1.2rem',
-      fontWeight: '600'
-    },
-    centerLocation: {
-      margin: '0',
-      color: '#6c757d',
-      fontSize: '0.95rem'
-    },
-    centerActions: {
-      display: 'flex',
-      gap: '0.75rem',
-      marginTop: '1rem'
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this dive center?")) {
+      try {
+        setLoading(true);
+        await axios.delete(`http://localhost:5000/api/dive-centers/${id}`);
+        setMessage("Dive center deleted successfully!");
+        fetchDiveCenters();
+        if (selectedCenter && selectedCenter._id === id) {
+          resetForm();
+        }
+      } catch (err) {
+        console.error("Error deleting dive center:", err);
+        setMessage("Failed to delete dive center.");
+      } finally {
+        setLoading(false);
+        setTimeout(() => setMessage(""), 3000);
+      }
     }
   };
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Dive Center Admin</h1>
-      
+      <h1 style={styles.heading}>Dive Center Admin Panel</h1>
+
+      {loading && (
+        <div style={styles.overlay}>
+          <div style={styles.spinner}></div>
+        </div>
+      )}
+
       {message && (
-        <div style={{
-          ...styles.alert,
-          ...(message.includes('success') ? styles.alertSuccess : styles.alertError)
-        }}>
+        <div
+          style={{
+            ...styles.messageBox,
+            backgroundColor: message.includes("successfully")
+              ? "#d4edda"
+              : "#f8d7da",
+            color: message.includes("successfully") ? "#155724" : "#721c24",
+            borderColor: message.includes("successfully")
+              ? "#c3e6cb"
+              : "#f5c6cb",
+          }}
+        >
           {message}
         </div>
       )}
-      
-      {/* Submit readiness notification */}
-      {!isFormEmpty && (
-        <div style={{
-          ...styles.alert,
-          ...(canSubmit ? styles.alertReady : styles.alertNotReady)
-        }}>
-          {canSubmit 
-            ? 'Form is ready to submit! All required fields are filled.' 
-            : 'Please fill in all required fields (Name, Location, and Description) to submit the form.'
-          }
-        </div>
-      )}
-      
-      <div>
+
+      <div style={styles.contentWrapper}>
         <div style={styles.formContainer}>
-          <div style={styles.formSection}>
-            <h2 style={styles.formTitle}>
-              {selectedCenter ? 'Edit Center' : 'Add New Center'}
-            </h2>
-            
+          <h2 style={styles.subHeading}>
+            {selectedCenter ? "Edit Dive Center" : "Create New Dive Center"}
+          </h2>
+          <form onSubmit={handleSubmit}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Name *</label>
+              <label style={styles.label}>Name:</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                style={styles.input}
                 required
+                style={styles.input}
               />
             </div>
-            
             <div style={styles.formGroup}>
-              <label style={styles.label}>Location *</label>
+              <label style={styles.label}>Location:</label>
               <input
                 type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                style={styles.input}
                 required
+                style={styles.input}
               />
             </div>
-            
-            <div style={styles.formRow}>
-              <div style={styles.formRowItem}>
-                <label style={styles.label}>Rating</label>
-                <input
-                  type="number"
-                  name="rating"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.rating}
-                  onChange={handleInputChange}
-                  style={styles.input}
-                />
-              </div>
-              
-              <div style={styles.formRowItem}>
-                <label style={styles.label}>Total Reviews</label>
-                <input
-                  type="number"
-                  name="totalReviews"
-                  min="0"
-                  value={formData.totalReviews}
-                  onChange={handleInputChange}
-                  style={styles.input}
-                />
-              </div>
-            </div>
-            
             <div style={styles.formGroup}>
-              <label style={styles.label}>Description *</label>
+              <label style={styles.label}>Rating (e.g., 4.5):</label>
+              <input
+                type="number"
+                step="0.1"
+                name="rating"
+                value={formData.rating}
+                onChange={handleInputChange}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Total Reviews:</label>
+              <input
+                type="number"
+                name="totalReviews"
+                value={formData.totalReviews}
+                onChange={handleInputChange}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Description:</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                style={styles.textarea}
                 required
-              />
+                rows="5"
+                style={styles.textarea}
+              ></textarea>
             </div>
-            
+
             <div style={styles.formGroup}>
-              <label style={styles.label}>Main Image</label>
+              <label style={styles.label}>Main Image:</label>
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleImageUpload}
-                style={styles.input}
+                onChange={handleMainImageUpload}
+                style={styles.fileInput}
               />
-              {formData.mainImage && (
-                <img 
-                  src={formData.mainImage} 
-                  alt="Preview" 
-                  style={styles.imagePreview}
-                />
+              {mainImageUrl && (
+                <div style={styles.imagePreviewContainer}>
+                  <img
+                    src={mainImageUrl}
+                    alt="Main Preview"
+                    style={styles.imagePreview}
+                  />
+                </div>
               )}
             </div>
-            
+
             <div style={styles.formGroup}>
-              <label style={styles.label}>Gallery Images</label>
+              <label style={styles.label}>Gallery Images:</label>
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleGalleryUpload}
-                style={styles.input}
+                style={styles.fileInput}
               />
-              <div style={styles.galleryPreview}>
-                {formData.gallery.map((img, index) => (
-                  <div key={index} style={styles.galleryItem}>
-                    <img src={img} alt={`Gallery ${index}`} style={styles.galleryImage} />
-                    <button 
-                      type="button" 
-                      style={styles.galleryRemoveBtn}
-                      onClick={() => setFormData(prev => ({
-                        ...prev,
-                        gallery: prev.gallery.filter((_, i) => i !== index)
-                      }))}
+              <div style={styles.galleryPreviewContainer}>
+                {galleryImageUrls.map((url, index) => (
+                  <div
+                    key={`existing-${url}`}
+                    style={styles.galleryImageWrapper}
+                  >
+                    <img
+                      src={url}
+                      alt={`Gallery ${index}`}
+                      style={styles.galleryImage}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(index, false)}
+                      style={styles.removeImageButton}
                     >
-                      ×
+                      &#x2715;
+                    </button>
+                  </div>
+                ))}
+                {galleryFiles.map((file, index) => (
+                  <div
+                    key={`new-${file.name}-${index}`}
+                    style={styles.galleryImageWrapper}
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`New Gallery ${index}`}
+                      style={styles.galleryImage}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(index, true)}
+                      style={styles.removeImageButton}
+                    >
+                      &#x2715;
                     </button>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-          
-          <div style={styles.formSection}>
-            <h3 style={styles.formSubtitle}>Features</h3>
-            <div style={styles.tagInputGroup}>
-              <input
-                type="text"
-                value={tempFeature}
-                onChange={(e) => setTempFeature(e.target.value)}
-                placeholder="Add feature"
-                style={styles.tagInput}
-              />
-              <button 
-                type="button" 
-                onClick={addFeature} 
-                style={styles.tagAddBtn}
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Features:</label>
+              <div style={styles.addItemGroup}>
+                <input
+                  type="text"
+                  value={tempFeature}
+                  onChange={(e) => setTempFeature(e.target.value)}
+                  placeholder="Add a feature"
+                  style={styles.input}
+                />
+                <button
+                  type="button"
+                  onClick={addFeature}
+                  style={styles.addButton}
+                >
+                  Add
+                </button>
+              </div>
+              <div style={styles.tagsContainer}>
+                {formData.features.map((feature, index) => (
+                  <span key={index} style={styles.tag}>
+                    {feature}
+                    <button
+                      type="button"
+                      onClick={() => removeFeature(index)}
+                      style={styles.removeTagButton}
+                    >
+                      &#x2715;
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Specialties:</label>
+              <div style={styles.addItemGroup}>
+                <input
+                  type="text"
+                  value={tempSpecialty}
+                  onChange={(e) => setTempSpecialty(e.target.value)}
+                  placeholder="Add a specialty"
+                  style={styles.input}
+                />
+                <button
+                  type="button"
+                  onClick={addSpecialty}
+                  style={styles.addButton}
+                >
+                  Add
+                </button>
+              </div>
+              <div style={styles.tagsContainer}>
+                {formData.specialties.map((specialty, index) => (
+                  <span key={index} style={styles.tag}>
+                    {specialty}
+                    <button
+                      type="button"
+                      onClick={() => removeSpecialty(index)}
+                      style={styles.removeTagButton}
+                    >
+                      &#x2715;
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Packages:</label>
+              <div style={styles.packageForm}>
+                <input
+                  type="text"
+                  name="name"
+                  value={newPackage.name}
+                  onChange={(e) =>
+                    setNewPackage({ ...newPackage, name: e.target.value })
+                  }
+                  placeholder="Package Name"
+                  style={styles.input}
+                />
+                <input
+                  type="text"
+                  name="price"
+                  value={newPackage.price}
+                  onChange={(e) =>
+                    setNewPackage({ ...newPackage, price: e.target.value })
+                  }
+                  placeholder="Price"
+                  style={styles.input}
+                />
+                <input
+                  type="text"
+                  name="duration"
+                  value={newPackage.duration}
+                  onChange={(e) =>
+                    setNewPackage({ ...newPackage, duration: e.target.value })
+                  }
+                  placeholder="Duration (e.g., 3 Days/2 Nights)"
+                  style={styles.input}
+                />
+                <textarea
+                  name="description"
+                  value={newPackage.description}
+                  onChange={(e) =>
+                    setNewPackage({
+                      ...newPackage,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Package Description"
+                  rows="3"
+                  style={styles.textarea}
+                ></textarea>
+                <button
+                  type="button"
+                  onClick={addPackage}
+                  style={styles.primaryButton}
+                >
+                  Add Package
+                </button>
+              </div>
+              <div style={styles.packagesList}>
+                {formData.packages.map((pkg) => (
+                  <div key={pkg._id || pkg.id} style={styles.packageItem}>
+                    <strong>{pkg.name}</strong> - {pkg.price}
+                    {pkg.duration && ` (${pkg.duration})`}
+                    <p style={styles.packageDescription}>{pkg.description}</p>
+                    <button
+                      type="button"
+                      onClick={() => removePackage(pkg._id || pkg.id)}
+                      style={styles.removePackageButton}
+                    >
+                      &#x2715;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={styles.buttonGroup}>
+              <button
+                type="submit"
+                disabled={!canSubmit || loading}
+                style={
+                  canSubmit && !loading
+                    ? styles.submitButton
+                    : styles.disabledButton
+                }
               >
-                Add
+                {selectedCenter ? "Update Dive Center" : "Create Dive Center"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                disabled={isFormEmpty && !selectedCenter}
+                style={
+                  isFormEmpty && !selectedCenter
+                    ? styles.disabledButton
+                    : styles.cancelButton
+                }
+              >
+                Cancel
               </button>
             </div>
-            <div style={styles.tagsContainer}>
-              {formData.features.map((feature, index) => (
-                <div key={index} style={styles.tagItem}>
-                  <span>{feature}</span>
-                  <button 
-                    type="button" 
-                    style={styles.tagRemoveBtn}
-                    onClick={() => removeFeature(index)}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div style={styles.formSection}>
-            <h3 style={styles.formSubtitle}>Specialties</h3>
-            <div style={styles.tagInputGroup}>
-              <input
-                type="text"
-                value={tempSpecialty}
-                onChange={(e) => setTempSpecialty(e.target.value)}
-                placeholder="Add specialty"
-                style={styles.tagInput}
-              />
-              <button 
-                type="button" 
-                onClick={addSpecialty} 
-                style={styles.tagAddBtn}
+          </form>
+        </div>
+
+        <div style={styles.listContainer}>
+          <h2 style={styles.subHeading}>Existing Dive Centers</h2>
+          <ul style={styles.ul}>
+            {diveCenters.map((center) => (
+              <li
+                key={center._id}
+                style={{
+                  ...styles.listItem,
+                  backgroundColor:
+                    selectedCenter?._id === center._id ? "#e6f7ff" : "white",
+                  borderColor:
+                    selectedCenter?._id === center._id ? "#91d5ff" : "#eee",
+                }}
               >
-                Add
-              </button>
-            </div>
-            <div style={styles.tagsContainer}>
-              {formData.specialties.map((specialty, index) => (
-                <div key={index} style={styles.tagItem}>
-                  <span>{specialty}</span>
-                  <button 
-                    type="button" 
-                    style={styles.tagRemoveBtn}
-                    onClick={() => removeSpecialty(index)}
+                <div>
+                  <strong style={styles.centerName}>{center.name}</strong> -{" "}
+                  {center.location}
+                  <p style={styles.centerDetails}>
+                    Rating: {center.rating} ({center.totalReviews} reviews)
+                  </p>
+                </div>
+                <div style={styles.listItemActions}>
+                  <button
+                    onClick={() => handleEdit(center)}
+                    style={styles.editButton}
                   >
-                    ×
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(center._id)}
+                    style={styles.deleteButton}
+                  >
+                    Delete
                   </button>
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          <div style={styles.formSection}>
-            <h3 style={styles.formSubtitle}>Packages</h3>
-            <div style={styles.packageFormGroup}>
-              <input
-                type="text"
-                placeholder="Package name"
-                value={newPackage.name}
-                onChange={(e) => setNewPackage({...newPackage, name: e.target.value})}
-                style={styles.packageInput}
-              />
-              <input
-                type="text"
-                placeholder="Price"
-                value={newPackage.price}
-                onChange={(e) => setNewPackage({...newPackage, price: e.target.value})}
-                style={styles.packageInput}
-              />
-              <input
-                type="text"
-                placeholder="Duration"
-                value={newPackage.duration}
-                onChange={(e) => setNewPackage({...newPackage, duration: e.target.value})}
-                style={styles.packageInput}
-              />
-              <textarea
-                placeholder="Description"
-                value={newPackage.description}
-                onChange={(e) => setNewPackage({...newPackage, description: e.target.value})}
-                style={styles.packageTextarea}
-              />
-              <button 
-                type="button" 
-                onClick={addPackage} 
-                style={styles.packageAddBtn}
-              >
-                Add Package
-              </button>
-            </div>
-            
-            <div style={styles.packagesContainer}>
-              {formData.packages.map(pkg => (
-                <div key={pkg.id} style={styles.packageItem}>
-                  <h4 style={styles.packageName}>{pkg.name}</h4>
-                  <p style={styles.packageDetail}><strong>Price:</strong> {pkg.price}</p>
-                  <p style={styles.packageDetail}><strong>Duration:</strong> {pkg.duration}</p>
-                  <p style={styles.packageDescription}>{pkg.description}</p>
-                  <button 
-                    type="button" 
-                    style={styles.packageRemoveBtn}
-                    onClick={() => removePackage(pkg.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div style={styles.formActions}>
-            <button 
-              type="button"
-              onClick={handleSubmit} 
-              style={styles.submitBtn}
-              disabled={!canSubmit}
-            >
-              {selectedCenter ? 'Update Center' : 'Add Center'}
-            </button>
-            <button 
-              type="button" 
-              onClick={resetForm}
-              style={styles.cancelBtn}
-            >
-              Cancel
-            </button>
-          </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>
   );
 };
 
-export default DiveCenterAdmin; 
+const styles = {
+  container: {
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    padding: "30px",
+    maxWidth: "1400px",
+    margin: "60px auto",
+    backgroundColor: "#f4f7f6",
+    borderRadius: "12px",
+    boxShadow: "0 6px 20px rgba(0,0,0,0.08)",
+    position: "relative",
+  },
+  heading: {
+    textAlign: "center",
+    color: "#2c3e50",
+    marginBottom: "30px",
+    fontSize: "2.5em",
+    fontWeight: "600",
+  },
+  messageBox: {
+    padding: "12px 20px",
+    marginBottom: "25px",
+    borderRadius: "8px",
+    border: "1px solid",
+    fontWeight: "bold",
+    textAlign: "center",
+    position: "relative",
+    zIndex: 100,
+  },
+  contentWrapper: {
+    display: "flex",
+    gap: "30px",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  formContainer: {
+    flex: "1",
+    minWidth: "450px",
+    backgroundColor: "#ffffff",
+    padding: "30px",
+    borderRadius: "10px",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+    border: "1px solid #e0e0e0",
+  },
+  listContainer: {
+    flex: "1",
+    minWidth: "450px",
+    backgroundColor: "#ffffff",
+    padding: "30px",
+    borderRadius: "10px",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+    border: "1px solid #e0e0e0",
+  },
+  subHeading: {
+    color: "#34495e",
+    marginBottom: "25px",
+    fontSize: "1.8em",
+    borderBottom: "2px solid #e9ecef",
+    paddingBottom: "10px",
+  },
+  formGroup: {
+    marginBottom: "20px",
+  },
+  label: {
+    display: "block",
+    marginBottom: "8px",
+    color: "#555",
+    fontWeight: "500",
+    fontSize: "0.95em",
+  },
+  input: {
+    width: "calc(100% - 24px)",
+    padding: "12px",
+    border: "1px solid #ced4da",
+    borderRadius: "6px",
+    fontSize: "1em",
+    transition: "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+  },
+  textarea: {
+    width: "calc(100% - 24px)",
+    padding: "12px",
+    border: "1px solid #ced4da",
+    borderRadius: "6px",
+    fontSize: "1em",
+    resize: "vertical",
+    minHeight: "100px",
+    transition: "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+  },
+  fileInput: {
+    display: "block",
+    width: "100%",
+    padding: "8px 0",
+    marginBottom: "10px",
+  },
+  imagePreviewContainer: {
+    marginTop: "15px",
+    border: "1px dashed #ced4da",
+    padding: "10px",
+    borderRadius: "8px",
+    display: "inline-block",
+  },
+  imagePreview: {
+    maxWidth: "180px",
+    maxHeight: "180px",
+    objectFit: "contain",
+    borderRadius: "6px",
+  },
+  galleryPreviewContainer: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "12px",
+    marginTop: "15px",
+    padding: "10px",
+    border: "1px dashed #ced4da",
+    borderRadius: "8px",
+    minHeight: "120px",
+    alignItems: "center",
+  },
+  galleryImageWrapper: {
+    position: "relative",
+    width: "100px",
+    height: "100px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    overflow: "hidden",
+  },
+  galleryImage: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: "3px",
+    right: "3px",
+    backgroundColor: "rgba(220, 53, 69, 0.85)",
+    color: "white",
+    border: "none",
+    borderRadius: "50%",
+    width: "24px",
+    height: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "0.9em",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
+  },
+  addItemGroup: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "10px",
+  },
+  addButton: {
+    padding: "10px 18px",
+    backgroundColor: "#28a745",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "1em",
+    transition: "background-color 0.2s",
+  },
+  tagsContainer: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    paddingTop: "5px",
+  },
+  tag: {
+    backgroundColor: "#e9ecef",
+    color: "#495057",
+    padding: "7px 12px",
+    borderRadius: "20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "7px",
+    fontSize: "0.9em",
+    fontWeight: "500",
+  },
+  removeTagButton: {
+    background: "none",
+    border: "none",
+    color: "#6c757d",
+    cursor: "pointer",
+    fontSize: "1em",
+    transition: "color 0.2s",
+  },
+  packageForm: {
+    border: "1px dashed #a0aec0",
+    padding: "15px",
+    borderRadius: "8px",
+    marginBottom: "15px",
+    backgroundColor: "#fdfdfd",
+  },
+  packagesList: {
+    borderTop: "1px solid #e9ecef",
+    paddingTop: "15px",
+  },
+  packageItem: {
+    backgroundColor: "#f2f7fb",
+    padding: "12px 15px",
+    marginBottom: "10px",
+    borderRadius: "8px",
+    border: "1px solid #e0e6ed",
+    position: "relative",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+  },
+  packageDescription: {
+    fontSize: "0.9em",
+    color: "#6c757d",
+    marginTop: "5px",
+    lineHeight: "1.5",
+  },
+  removePackageButton: {
+    position: "absolute",
+    top: "8px",
+    right: "8px",
+    backgroundColor: "transparent",
+    border: "none",
+    color: "#dc3545",
+    cursor: "pointer",
+    fontSize: "1.1em",
+  },
+  buttonGroup: {
+    display: "flex",
+    gap: "10px",
+    marginTop: "20px",
+    justifyContent: "flex-end",
+  },
+  primaryButton: {
+    padding: "12px 25px",
+    backgroundColor: "#007bff",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "1em",
+    fontWeight: "500",
+    transition: "background-color 0.2s",
+  },
+  submitButton: {
+    padding: "12px 25px",
+    backgroundColor: "#007bff",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "1em",
+    fontWeight: "500",
+    transition: "background-color 0.2s",
+  },
+  cancelButton: {
+    padding: "12px 25px",
+    backgroundColor: "#6c757d",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "1em",
+    fontWeight: "500",
+    transition: "background-color 0.2s",
+  },
+  disabledButton: {
+    padding: "12px 25px",
+    backgroundColor: "#cce5ff",
+    color: "#6699ff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "not-allowed",
+    fontSize: "1em",
+    fontWeight: "500",
+  },
+  ul: {
+    listStyle: "none",
+    padding: 0,
+  },
+  listItem: {
+    border: "1px solid #eee",
+    padding: "18px 20px",
+    marginBottom: "12px",
+    borderRadius: "8px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    transition: "background-color 0.2s, border-color 0.2s",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+  },
+  centerName: {
+    fontSize: "1.15em",
+    color: "#333",
+    marginBottom: "5px",
+    display: "block",
+  },
+  centerDetails: {
+    fontSize: "0.9em",
+    color: "#666",
+    margin: 0,
+  },
+  listItemActions: {
+    display: "flex",
+    gap: "8px",
+  },
+  editButton: {
+    padding: "8px 15px",
+    backgroundColor: "#ffc107",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "0.9em",
+    transition: "background-color 0.2s",
+  },
+  deleteButton: {
+    padding: "8px 15px",
+    backgroundColor: "#dc3545",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "0.9em",
+    transition: "background-color 0.2s",
+  },
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+    backdropFilter: "blur(5px)",
+  },
+  spinner: {
+    border: "8px solid #f3f3f3",
+    borderTop: "8px solid #3498db",
+    borderRadius: "50%",
+    width: "60px",
+    height: "60px",
+    animation: "spin 1s linear infinite",
+  },
+};
+
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = `@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}`;
+document.head.appendChild(styleSheet);
+
+export default DiveCenterAdmin;
