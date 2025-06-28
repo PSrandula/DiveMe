@@ -102,3 +102,138 @@ exports.getDiveCenterById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.createDiveCenter = async (req, res) => {
+  try {
+    const { name, location, rating, totalReviews, description } = req.body;
+
+    const parsedFeatures = parseArrayField(req.body.features);
+    const parsedSpecialties = parseArrayField(req.body.specialties);
+    const parsedPackages = parsePackagesField(req.body.packages);
+
+    const mainImageUrl = req.files?.mainImage?.[0]?.path || "";
+    const galleryUrls = req.files?.gallery?.map((file) => file.path) || [];
+
+    console.log("Main image URL:", mainImageUrl);
+    console.log("Gallery URLs:", galleryUrls);
+
+    const newCenter = new DiveCenter({
+      name,
+      location,
+      rating: parseFloat(rating) || 0,
+      totalReviews: parseInt(totalReviews) || 0,
+      description,
+      features: parsedFeatures,
+      specialties: parsedSpecialties,
+      packages: parsedPackages,
+      mainImage: mainImageUrl,
+      gallery: galleryUrls,
+      reviews: [],
+      adminId: req.user._id,
+    });
+
+    await newCenter.save();
+
+    res.status(201).json(newCenter);
+  } catch (error) {
+    console.error("Error creating dive center:", error);
+    if (error.name === "ValidationError") {
+      res.status(400).json({ message: error.message, errors: error.errors });
+    } else {
+      res
+        .status(400)
+        .json({ message: error.message || "Failed to create dive center." });
+    }
+  }
+};
+
+exports.updateDiveCenter = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = { ...req.body };
+
+    if (req.body.features) {
+      updates.features = parseArrayField(req.body.features);
+    } else {
+      updates.features = [];
+    }
+
+    if (req.body.specialties) {
+      updates.specialties = parseArrayField(req.body.specialties);
+    } else {
+      updates.specialties = [];
+    }
+
+    updates.packages = parsePackagesField(req.body.packages);
+
+    const existingCenter = await DiveCenter.findById(id);
+    if (!existingCenter) {
+      return res.status(404).json({ error: "Dive Center not found" });
+    }
+
+    if (req.files?.mainImage?.[0]) {
+      if (existingCenter.mainImage) {
+        const publicId = getPublicIdFromCloudinaryUrl(existingCenter.mainImage);
+        if (publicId) {
+          await cloudinary.uploader.destroy(publicId, (error, result) => {
+            if (error)
+              console.error("Cloudinary deletion error for main image:", error);
+          });
+        }
+      }
+      updates.mainImage = req.files.mainImage[0].path;
+    }
+
+    const newGalleryUrls = req.files?.gallery?.map((file) => file.path) || [];
+
+    const existingGalleryUrlsFromFrontend = Array.isArray(
+      req.body.existingGalleryUrls
+    )
+      ? req.body.existingGalleryUrls
+      : req.body.existingGalleryUrls
+      ? [req.body.existingGalleryUrls]
+      : [];
+
+    const imagesToDeleteFromCloudinary = existingCenter.gallery.filter(
+      (url) => !existingGalleryUrlsFromFrontend.includes(url)
+    );
+
+    for (const url of imagesToDeleteFromCloudinary) {
+      const publicId = getPublicIdFromCloudinaryUrl(url);
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId, (error, result) => {
+          if (error)
+            console.error(
+              "Cloudinary deletion error for gallery image:",
+              error
+            );
+        });
+      }
+    }
+
+    updates.gallery = [...existingGalleryUrlsFromFrontend, ...newGalleryUrls];
+
+    if (updates.rating !== undefined)
+      updates.rating = parseFloat(updates.rating) || 0;
+    if (updates.totalReviews !== undefined)
+      updates.totalReviews = parseInt(updates.totalReviews) || 0;
+
+    const updated = await DiveCenter.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updated)
+      return res.status(404).json({ error: "Dive Center not found" });
+    res.json(updated);
+  } catch (err) {
+    console.error("Error updating dive center:", err);
+    if (err.name === "ValidationError") {
+      res.status(400).json({ message: err.message, errors: err.errors });
+    } else {
+      res
+        .status(400)
+        .json({ error: err.message || "Failed to update dive center." });
+    }
+  }
+};
