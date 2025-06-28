@@ -237,3 +237,38 @@ exports.updateDiveCenter = async (req, res) => {
     }
   }
 };
+
+exports.deleteDiveCenter = async (req, res) => {
+  try {
+    const deletedCenter = await DiveCenter.findByIdAndDelete(req.params.id);
+    if (!deletedCenter)
+      return res.status(404).json({ error: "Dive Center not found" });
+
+    if (deletedCenter.mainImage) {
+      const publicId = getPublicIdFromCloudinaryUrl(deletedCenter.mainImage);
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId, (error, result) => {
+          if (error)
+            console.error("Cloudinary deletion error for main image:", error);
+        });
+      }
+    }
+    for (const imagePath of deletedCenter.gallery) {
+      const publicId = getPublicIdFromCloudinaryUrl(imagePath);
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId, (error, result) => {
+          if (error)
+            console.error(
+              "Cloudinary deletion error for gallery image:",
+              error
+            );
+        });
+      }
+    }
+
+    res.json({ message: "Dive Center deleted" });
+  } catch (err) {
+    console.error("Error deleting dive center:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
