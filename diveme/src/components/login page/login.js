@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 // import './login.css';
-import '../register page/register';
+import "../register page/register";
 
 const Login = () => {
   // Form state management
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    userType: 'tourist',
-    remember: false
+    email: "",
+    password: "",
+    userType: "tourist",
+    remember: false,
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -26,12 +26,12 @@ const Login = () => {
 
   // Load remembered email if available
   const loadSavedData = () => {
-    const rememberedEmail = localStorage.getItem('diveme_remembered_email');
+    const rememberedEmail = localStorage.getItem("diveme_remembered_email");
     if (rememberedEmail) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         email: rememberedEmail,
-        remember: true
+        remember: true,
       }));
     }
   };
@@ -39,24 +39,24 @@ const Login = () => {
   // Form handlers
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
 
     // Clear errors when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
 
   const handleUserTypeChange = (userType) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      userType
+      userType,
     }));
   };
 
@@ -67,21 +67,21 @@ const Login = () => {
   // Form validation
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Email validation
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
-    
+
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters long';
+      newErrors.password = "Password must be at least 6 characters long";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -90,65 +90,59 @@ const Login = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (isLoading) return;
+    if (!validateForm()) return;
 
-  // Save data if remember me is checked
-  const saveDataIfRemembered = () => {
-    if (formData.remember) {
-      localStorage.setItem('diveme_remembered_email', formData.email);
-    } else {
-      localStorage.removeItem('diveme_remembered_email');
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          userType: formData.userType, // ✅ important
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ password: data.message || "Login failed" });
+        setIsLoading(false);
+        return;
+      }
+
+      localStorage.setItem("diveme_user", JSON.stringify(data));
+      localStorage.setItem("diveme_token", data.token);
+
+      if (formData.remember) {
+        localStorage.setItem("diveme_remembered_email", formData.email);
+      } else {
+        localStorage.removeItem("diveme_remembered_email");
+      }
+      navigate("/home");
+    } catch (error) {
+      console.error("Login failed:", error);
+      setErrors({ password: "Server error, please try again later." });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Simulate login API call
-  const simulateLogin = () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        saveDataIfRemembered();
-        console.log('Login successful:', {
-          email: formData.email,
-          userType: formData.userType,
-          remember: formData.remember
-        });
-        resolve();
-      }, 2000);
-    });
+  const navigate = useNavigate();
+
+  const handleSignupClick = (e) => {
+    e.preventDefault(); // Prevent default anchor behavior
+    navigate("/register"); // Navigate to Register page
   };
 
- const handleFormSubmit = async (e) => {
-  e.preventDefault();
-
-  if (isLoading) return;
-
-  if (!validateForm()) return;
-
-  setIsLoading(true);
-
-  try {
-    await simulateLogin();
-
-    setTimeout(() => {
-      alert(`Welcome to DiveME! You are logged in as a ${formData.userType}.`);
-      navigate('/home'); // 👈 Redirect after successful login
-    }, 1000);
-
-  } catch (error) {
-    console.error('Login failed:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-const navigate = useNavigate();
-
- const handleSignupClick = (e) => {
-  e.preventDefault(); // Prevent default anchor behavior
-  navigate('/register'); // Navigate to Register page
-};
-
-
   const handleKeyPress = (e, nextFieldId) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       if (nextFieldId) {
         document.getElementById(nextFieldId)?.focus();
@@ -173,27 +167,51 @@ const navigate = useNavigate();
                 <p className="brand-subtitle">Discover the underwater world</p>
               </div>
             </div>
-            
+
             <div className="features-preview">
               <div className="feature-item">
-                <svg className="feature-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                <svg
+                  className="feature-icon"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
                 <span>Premium Diving Experiences</span>
               </div>
               <div className="feature-item">
-                <svg className="feature-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <svg
+                  className="feature-icon"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
                 <span>Expert Dive Guides</span>
               </div>
               <div className="feature-item">
-                <svg className="feature-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
+                <svg
+                  className="feature-icon"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
                 <span>Stunning Dive Locations</span>
               </div>
@@ -216,10 +234,20 @@ const navigate = useNavigate();
                 <div className="user-type-buttons">
                   <button
                     type="button"
-                    className={`user-type-btn ${formData.userType === 'tourist' ? 'active' : ''}`}
-                    onClick={() => handleUserTypeChange('tourist')}
+                    className={`user-type-btn ${
+                      formData.userType === "tourist" ? "active" : ""
+                    }`}
+                    onClick={() => handleUserTypeChange("tourist")}
                   >
-                    <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="icon"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
@@ -227,10 +255,20 @@ const navigate = useNavigate();
                   </button>
                   <button
                     type="button"
-                    className={`user-type-btn ${formData.userType === 'admin' ? 'active admin' : ''}`}
-                    onClick={() => handleUserTypeChange('admin')}
+                    className={`user-type-btn ${
+                      formData.userType === "admin" ? "active admin" : ""
+                    }`}
+                    onClick={() => handleUserTypeChange("admin")}
                   >
-                    <svg className="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="icon"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M3 21h18"></path>
                       <path d="M5 21V7l8-4v18"></path>
                       <path d="M19 21V11l-6-4"></path>
@@ -242,9 +280,19 @@ const navigate = useNavigate();
 
               {/* Email Input */}
               <div className="form-group">
-                <label htmlFor="email" className="form-label">Email Address</label>
+                <label htmlFor="email" className="form-label">
+                  Email Address
+                </label>
                 <div className="input-wrapper">
-                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="input-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
@@ -255,8 +303,8 @@ const navigate = useNavigate();
                     placeholder="Enter your email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    onKeyPress={(e) => handleKeyPress(e, 'password')}
-                    className={errors.email ? 'error' : ''}
+                    onKeyPress={(e) => handleKeyPress(e, "password")}
+                    className={errors.email ? "error" : ""}
                     required
                   />
                 </div>
@@ -267,23 +315,40 @@ const navigate = useNavigate();
 
               {/* Password Input */}
               <div className="form-group">
-                <label htmlFor="password" className="form-label">Password</label>
+                <label htmlFor="password" className="form-label">
+                  Password
+                </label>
                 <div className="input-wrapper">
-                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <svg
+                    className="input-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect
+                      x="3"
+                      y="11"
+                      width="18"
+                      height="11"
+                      rx="2"
+                      ry="2"
+                    ></rect>
                     <circle cx="12" cy="16" r="1"></circle>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
-                  
+
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     id="password"
                     name="password"
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleInputChange}
                     onKeyPress={(e) => handleKeyPress(e)}
-                    className={errors.password ? 'error input' : 'input'}
+                    className={errors.password ? "error input" : "input"}
                     required
                   />
 
@@ -293,7 +358,15 @@ const navigate = useNavigate();
                     onClick={togglePasswordVisibility}
                     aria-label="Toggle password visibility"
                   >
-                    <svg className="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      className="eye-icon"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       {showPassword ? (
                         <>
                           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
@@ -325,24 +398,42 @@ const navigate = useNavigate();
                   />
                   <label htmlFor="remember">Remember me</label>
                 </div>
-                <a href="#" className="forgot-password">Forgot password?</a>
+                <a href="#" className="forgot-password">
+                  Forgot password?
+                </a>
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
-                className={`submit-btn ${formData.userType === 'admin' ? 'admin' : ''} ${isLoading ? 'loading' : ''}`}
+                className={`submit-btn ${
+                  formData.userType === "admin" ? "admin" : ""
+                } ${isLoading ? "loading" : ""}`}
                 disabled={isLoading}
               >
                 {!isLoading && (
-                  <svg className="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    className="btn-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
                     <polyline points="10,17 15,12 10,7"></polyline>
                     <line x1="15" y1="12" x2="3" y2="12"></line>
                   </svg>
                 )}
-                <span className={`btn-text ${isLoading ? 'loading' : ''}`}>
-                  {isLoading ? '' : `Sign In as ${formData.userType === 'admin' ? 'Diving Center' : 'Tourist'}`}
+                <span className={`btn-text ${isLoading ? "loading" : ""}`}>
+                  {isLoading
+                    ? ""
+                    : `Sign In as ${
+                        formData.userType === "admin"
+                          ? "Diving Center"
+                          : "Tourist"
+                      }`}
                 </span>
                 {isLoading && (
                   <div className="loading-spinner">
@@ -353,7 +444,12 @@ const navigate = useNavigate();
 
               {/* Sign Up Link */}
               <div className="signup-link">
-                <p>Don't have an account? <a href="/register" onClick={handleSignupClick}>Sign up now</a></p>
+                <p>
+                  Don't have an account?{" "}
+                  <a href="/register" onClick={handleSignupClick}>
+                    Sign up now
+                  </a>
+                </p>
               </div>
             </form>
           </div>
@@ -653,12 +749,11 @@ const styles = `
   width: 100%;
 }
 
-/* Input fields */
 input[type="email"],
 input[type="password"],
 input[type="text"] {
   width: 100%;
-  padding: 16px 45px 16px 45px;
+  padding: 16px 16px 16px 40px;
   border: 2px solid #e5e7eb;
   border-radius: 15px;
   font-size: 1rem;
@@ -1095,7 +1190,7 @@ input.error {
 
 `;
 
-const styleElement = document.createElement('style');
+const styleElement = document.createElement("style");
 styleElement.innerHTML = styles;
 document.head.appendChild(styleElement);
 
