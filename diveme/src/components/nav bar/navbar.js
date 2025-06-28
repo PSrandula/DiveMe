@@ -1,16 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Menu, X, Home, ShoppingBag, Users, MapPin, FileText, UserPlus } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Menu,
+  X,
+  Home,
+  ShoppingBag,
+  Users,
+  MapPin,
+  FileText,
+  UserPlus,
+} from "lucide-react";
 
 export default function DiveMeNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const user = JSON.parse(localStorage.getItem("diveme_user"));
+  const isAdmin = user?.userType === "admin";
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const toggleMobileMenu = () => {
@@ -19,7 +30,7 @@ export default function DiveMeNavbar() {
 
   return (
     <>
-         <header className={`diveme-header ${isScrolled ? 'scrolled' : ''}`}>
+      <header className={`diveme-header ${isScrolled ? "scrolled" : ""}`}>
         {/* Logo Section */}
         <a href="/" className="logo-section" aria-label="DiveMe Home">
           <img
@@ -28,11 +39,11 @@ export default function DiveMeNavbar() {
             className="logo-image"
             onError={(e) => {
               // Hide the image and show fallback when image fails to load
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
             }}
           />
-          <div className="logo-fallback" style={{display: 'none'}}>
+          <div className="logo-fallback" style={{ display: "none" }}>
             DM
           </div>
           <span className="logo-text">DiveMe</span>
@@ -45,17 +56,19 @@ export default function DiveMeNavbar() {
               <Home size={12} />
               Home
             </a>
-            <a href="/admin" className="nav-link">
-              <Users size={12} />
+            {isAdmin && (
+              <a href="/admin" className="nav-link">
+                <Users size={12} />
                 Admin Dashboard
-            </a>
+              </a>
+            )}
             <a href="/packages" className="nav-link">
               <ShoppingBag size={12} />
               Packages
             </a>
             <a href="/map" className="nav-link">
               <MapPin size={12} />
-                Map View
+              Map View
             </a>
             <a href="/dive" className="nav-link">
               <FileText size={12} />
@@ -66,9 +79,19 @@ export default function DiveMeNavbar() {
               Active Bookings
             </a>
           </div>
-          <a href="/" className="signup-btn">
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              localStorage.removeItem("token");
+              localStorage.removeItem("diveme_token");
+              localStorage.removeItem("diveme_user");
+              window.location.href = "/";
+            }}
+            className="signup-btn"
+          >
             <UserPlus size={12} />
-            Sign Up
+            Log Out
           </a>
         </nav>
 
@@ -83,35 +106,63 @@ export default function DiveMeNavbar() {
       </header>
 
       {/* Mobile Menu */}
-      <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+      <div className={`mobile-menu ${isMobileMenuOpen ? "open" : ""}`}>
         <nav className="mobile-nav-links">
-          <a href="/home" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a
+            href="/home"
+            className="mobile-nav-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <Home size={20} />
             Home
           </a>
-          <a href="/admin" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a
+            href="/admin"
+            className="mobile-nav-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <Users size={20} />
             Admin Dashboard
           </a>
-          <a href="/packages" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a
+            href="/packages"
+            className="mobile-nav-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <ShoppingBag size={20} />
             Packages
           </a>
-          <a href="/map" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a
+            href="/map"
+            className="mobile-nav-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <MapPin size={20} />
             MapView
           </a>
-          <a href="/dive" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a
+            href="/dive"
+            className="mobile-nav-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <FileText size={20} />
             Dive Centers
           </a>
-          <a href="/activebooking" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+          <a
+            href="/activebooking"
+            className="mobile-nav-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <FileText size={20} />
             Active sBooking
           </a>
-          <a href="/" className="mobile-signup-btn" onClick={() => setIsMobileMenuOpen(false)}>
+          <a
+            href="/"
+            className="mobile-signup-btn"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <UserPlus size={20} />
-            Sign Up
+            Log Out
           </a>
         </nav>
       </div>
@@ -236,7 +287,7 @@ export default function DiveMeNavbar() {
           text-decoration: none;
           font-weight: 600;
           font-size: 1rem;
-          padding: 8px 16px;
+          padding: 8px 12px;
           border-radius: 20px;
           transition: all 0.3s ease;
           display: flex;
